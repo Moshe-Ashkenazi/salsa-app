@@ -4,22 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>סלסה — זמינות</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700;1,900&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,900&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg:          #0C0C10;
-            --surface:     #13131A;
-            --surface2:    #1A1A24;
-            --border:      rgba(255,255,255,0.06);
-            --accent:      #FF3D6B;
-            --accent-dim:  rgba(255,61,107,0.12);
-            --gold:        #F5C542;
-            --gold-dim:    rgba(245,197,66,0.1);
-            --green:       #00D67D;
-            --green-dim:   rgba(0,214,125,0.1);
-            --text:        #EEEAE4;
-            --muted:       #585669;
-            --muted2:      #35334A;
+            --bg:         #0C0C10;
+            --surface:    #13131A;
+            --surface2:   #1C1C27;
+            --border:     rgba(255,255,255,0.06);
+            --accent:     #FF3D6B;
+            --gold:       #F5C542;
+            --green:      #00D67D;
+            --amber:      #FF9F45;
+            --text:       #EEEAE4;
+            --muted:      #585669;
+            --muted2:     #252535;
         }
 
         *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -29,598 +27,598 @@
             background: var(--bg);
             color: var(--text);
             min-height: 100dvh;
-            padding-bottom: 60px;
+            padding-bottom: 64px;
             overflow-x: hidden;
         }
 
-        /* ── HEADER ─────────────────────────────────────────── */
+        /* ── HEADER ──────────────────────────────────────── */
         .header {
-            padding: 48px 24px 28px;
+            padding: 44px 20px 24px;
             text-align: center;
             position: relative;
         }
         .header-glow {
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,61,107,0.18) 0%, transparent 70%);
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255,61,107,0.16) 0%, transparent 70%);
             pointer-events: none;
         }
         .header-tag {
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-            color: var(--accent);
-            margin-bottom: 10px;
+            font-size: 10px; font-weight: 600;
+            letter-spacing: 5px; text-transform: uppercase;
+            color: var(--accent); margin-bottom: 8px;
         }
         .header-title {
             font-family: 'Playfair Display', serif;
-            font-style: italic;
-            font-size: 52px;
-            font-weight: 900;
-            line-height: 1;
-            background: linear-gradient(135deg, #EEEAE4 0%, rgba(238,234,228,0.7) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-style: italic; font-size: 50px; font-weight: 900; line-height: 1;
+            background: linear-gradient(135deg, #EEEAE4 0%, rgba(238,234,228,0.65) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-        .header-title em {
-            -webkit-text-fill-color: var(--accent);
-            font-style: inherit;
+        .header-title em { -webkit-text-fill-color: var(--accent); }
+        .header-sub { margin-top: 8px; font-size: 13px; color: var(--muted); font-weight: 400; }
+
+        /* ── MONTH NAV ───────────────────────────────────── */
+        .month-nav {
+            display: flex; align-items: center;
+            justify-content: center; gap: 12px; margin-top: 18px;
         }
-        .header-sub {
-            margin-top: 10px;
-            font-size: 13px;
-            font-weight: 400;
-            color: var(--muted);
-            letter-spacing: 0.3px;
+        .nav-btn {
+            width: 40px; height: 40px; border-radius: 13px;
+            border: 1px solid var(--border); background: var(--surface);
+            color: var(--muted); display: flex; align-items: center;
+            justify-content: center; cursor: pointer;
+            transition: all 0.18s ease; font-size: 18px; line-height: 1;
         }
+        .nav-btn:active { transform: scale(0.88); }
+        .nav-btn:hover  { border-color: rgba(255,255,255,0.13); color: var(--text); }
+        .nav-btn:disabled { opacity: 0.25; pointer-events: none; }
+
         .month-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            background: var(--gold-dim);
-            border: 1px solid rgba(245,197,66,0.18);
-            color: var(--gold);
-            font-size: 12px;
-            font-weight: 600;
-            padding: 6px 16px;
-            border-radius: 100px;
-            margin-top: 16px;
-            letter-spacing: 0.4px;
+            display: inline-flex; align-items: center; gap: 7px;
+            border: 1px solid rgba(245,197,66,0.2);
+            background: rgba(245,197,66,0.07);
+            color: var(--gold); font-size: 13px; font-weight: 600;
+            padding: 9px 20px; border-radius: 100px;
+            min-width: 150px; justify-content: center;
+            letter-spacing: 0.2px; transition: all 0.22s;
         }
-        .month-chip svg { flex-shrink: 0; }
-
-        /* ── CONTENT ────────────────────────────────────────── */
-        .content { padding: 0 16px; }
-
-        /* ── NAME PILLS ─────────────────────────────────────── */
-        .section-eyebrow {
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 3.5px;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 12px;
+        .month-chip.archive {
+            border-color: rgba(255,159,69,0.22);
+            background: rgba(255,159,69,0.07);
+            color: var(--amber);
         }
+
+        .archive-badge {
+            display: none; align-items: center; justify-content: center;
+            gap: 5px; background: rgba(255,159,69,0.08);
+            border: 1px solid rgba(255,159,69,0.2);
+            color: var(--amber); font-size: 11px; font-weight: 600;
+            padding: 5px 14px; border-radius: 100px;
+            margin: 10px auto 0; width: fit-content; letter-spacing: 0.5px;
+        }
+        .archive-badge.show { display: flex; }
+
+        /* ── CONTENT ─────────────────────────────────────── */
+        .content { padding: 20px 16px 0; }
+
+        .section-label {
+            font-size: 10px; font-weight: 600;
+            letter-spacing: 3.5px; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 11px;
+        }
+
+        /* ── NAME PILLS ──────────────────────────────────── */
         .name-pills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 28px;
+            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;
         }
         .name-pill {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--muted);
-            padding: 9px 20px;
-            border-radius: 100px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.22s ease;
-            font-family: 'Sora', sans-serif;
-            letter-spacing: -0.2px;
+            background: var(--surface); border: 1px solid var(--border);
+            color: var(--muted); padding: 9px 18px; border-radius: 100px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: all 0.2s; font-family: 'Sora', sans-serif;
         }
-        .name-pill:active { transform: scale(0.95); }
+        .name-pill:active { transform: scale(0.93); }
         .name-pill.selected {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: #fff;
-            font-weight: 600;
-            box-shadow: 0 0 20px rgba(255,61,107,0.3);
+            background: var(--accent); border-color: var(--accent);
+            color: #fff; font-weight: 600;
+            box-shadow: 0 0 20px rgba(255,61,107,0.28);
         }
 
-        /* ── DATE CARDS ─────────────────────────────────────── */
+        /* ── DATE CARDS ──────────────────────────────────── */
         .date-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 22px;
-            padding: 20px;
-            margin-bottom: 12px;
-            position: relative;
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(16px);
-            animation: cardIn 0.4s ease forwards;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 22px; padding: 20px;
+            margin-bottom: 12px; position: relative;
+            overflow: hidden; opacity: 0; transform: translateY(14px);
+            animation: cardIn 0.38s ease forwards;
         }
-        .date-card:nth-child(1) { animation-delay: 0.05s; }
-        .date-card:nth-child(2) { animation-delay: 0.1s; }
-        .date-card:nth-child(3) { animation-delay: 0.15s; }
-        .date-card:nth-child(4) { animation-delay: 0.2s; }
-        .date-card:nth-child(5) { animation-delay: 0.25s; }
+        @keyframes cardIn { to { opacity:1; transform:translateY(0); } }
+        .date-card:nth-child(1){animation-delay:.04s}
+        .date-card:nth-child(2){animation-delay:.09s}
+        .date-card:nth-child(3){animation-delay:.14s}
+        .date-card:nth-child(4){animation-delay:.19s}
+        .date-card:nth-child(5){animation-delay:.24s}
 
-        @keyframes cardIn {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Subtle left-edge accent line */
         .date-card::before {
-            content: '';
-            position: absolute;
-            top: 20px; bottom: 20px; right: 0;
-            width: 3px;
-            border-radius: 2px 0 0 2px;
-            background: linear-gradient(180deg, var(--accent) 0%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.3s;
+            content:''; position:absolute;
+            top:20px; bottom:20px; right:0;
+            width:3px; border-radius:2px 0 0 2px;
+            background:linear-gradient(180deg,var(--accent) 0%,transparent 100%);
+            opacity:0; transition:opacity .3s;
         }
-        .date-card.has-my-status::before { opacity: 1; }
+        .date-card.has-my-status::before { opacity:1; }
 
-        /* Top row */
         .card-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 18px;
+            display:flex; align-items:flex-start;
+            justify-content:space-between; margin-bottom:16px;
         }
-        .date-info {}
         .date-day-tag {
-            font-size: 9px;
-            font-weight: 600;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            color: var(--accent);
-            margin-bottom: 4px;
+            font-size:9px; font-weight:600;
+            letter-spacing:4px; text-transform:uppercase;
+            color:var(--accent); margin-bottom:3px;
         }
         .date-day-num {
-            font-family: 'Playfair Display', serif;
-            font-size: 32px;
-            font-weight: 700;
-            line-height: 1;
-            color: var(--text);
+            font-family:'Playfair Display',serif;
+            font-size:30px; font-weight:700; line-height:1;
         }
-        .date-month-name {
-            font-size: 12px;
-            color: var(--muted);
-            margin-top: 2px;
-            font-weight: 400;
-        }
+        .date-month-name { font-size:12px; color:var(--muted); margin-top:3px; }
 
         /* Action buttons */
-        .action-btns {
-            display: flex;
-            gap: 9px;
-            transition: opacity 0.2s;
-        }
-        .action-btns.locked {
-            opacity: 0.25;
-            pointer-events: none;
-        }
+        .action-btns { display:flex; gap:9px; }
+        .action-btns.locked { opacity:0.2; pointer-events:none; }
         .btn-avail {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            border: 1.5px solid;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.18s ease;
-            background: transparent;
-            font-family: 'Sora', sans-serif;
+            width:52px; height:52px; border-radius:16px; border:1.5px solid;
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; transition:all .18s; background:transparent; font-size:20px;
         }
-        .btn-avail:active { transform: scale(0.9); }
-
+        .btn-avail:active { transform:scale(0.88); }
         .btn-yes {
-            border-color: rgba(0,214,125,0.25);
-            color: var(--green);
-            background: var(--green-dim);
+            border-color:rgba(0,214,125,0.25); color:var(--green);
+            background:rgba(0,214,125,0.07);
         }
-        .btn-yes.active, .btn-yes:not(.locked):hover {
-            background: var(--green);
-            border-color: var(--green);
-            color: #fff;
-            box-shadow: 0 0 18px rgba(0,214,125,0.35);
+        .btn-yes.active {
+            background:var(--green); border-color:var(--green);
+            color:#fff; box-shadow:0 0 18px rgba(0,214,125,0.35);
         }
         .btn-no {
-            border-color: rgba(255,61,107,0.25);
-            color: var(--accent);
-            background: var(--accent-dim);
+            border-color:rgba(255,61,107,0.25); color:var(--accent);
+            background:rgba(255,61,107,0.07);
         }
-        .btn-no.active, .btn-no:not(.locked):hover {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: #fff;
-            box-shadow: 0 0 18px rgba(255,61,107,0.35);
+        .btn-no.active {
+            background:var(--accent); border-color:var(--accent);
+            color:#fff; box-shadow:0 0 18px rgba(255,61,107,0.35);
         }
 
-        .btn-icon { font-size: 20px; line-height: 1; }
-
-        /* Divider */
-        .card-divider {
-            height: 1px;
-            background: var(--border);
-            margin: 0 0 16px;
+        .archive-label {
+            font-size:11px; color:var(--amber);
+            padding-top:12px; font-weight:500;
         }
 
-        /* Instructor avatar grid */
+        .card-divider { height:1px; background:var(--border); margin:0 0 14px; }
+
+        /* ── INSTRUCTOR GRID ─────────────────────────────── */
         .inst-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 4px;
+            display:grid; grid-template-columns:repeat(6,1fr);
+            gap:5px; margin-bottom:14px;
         }
         .inst-slot {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
+            display:flex; flex-direction:column;
+            align-items:center; gap:5px;
         }
         .inst-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 700;
-            border: 1.5px solid transparent;
-            transition: all 0.25s ease;
-            background: var(--muted2);
-            color: var(--muted);
-        }
-        .inst-avatar.s-available {
-            border-color: rgba(0,214,125,0.35);
-            background: rgba(0,214,125,0.1);
-        }
-        .inst-avatar.s-unavailable {
-            border-color: rgba(255,61,107,0.25);
-            background: rgba(255,61,107,0.08);
-            color: var(--muted);
-            opacity: 0.5;
-        }
-        .inst-avatar.s-available.is-me {
-            box-shadow: 0 0 12px rgba(0,214,125,0.4);
-            transform: scale(1.08);
-        }
-        .inst-avatar.s-unavailable.is-me {
-            box-shadow: 0 0 12px rgba(255,61,107,0.3);
-            transform: scale(1.08);
+            width:38px; height:38px; border-radius:12px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:13px; font-weight:700;
+            border:1.5px solid transparent;
+            transition:all .25s ease;
         }
         .inst-label {
-            font-size: 9px;
-            color: var(--muted);
-            font-weight: 500;
-            text-align: center;
+            font-size:9px; color:var(--muted);
+            font-weight:500; text-align:center; transition:color .2s;
         }
 
-        /* ── TOAST ──────────────────────────────────────────── */
+        /* PENDING — amber dashed, pulsing */
+        .inst-avatar.s-pending {
+            background:rgba(255,159,69,0.1);
+            border-color:rgba(255,159,69,0.4);
+            border-style:dashed;
+            color:var(--amber);
+            animation:pendingPulse 2.4s ease-in-out infinite;
+        }
+        @keyframes pendingPulse {
+            0%,100%{box-shadow:0 0 0 0 rgba(255,159,69,0)}
+            50%    {box-shadow:0 0 0 4px rgba(255,159,69,0.13)}
+        }
+        .inst-slot.s-pending .inst-label { color:var(--amber); font-weight:600; }
+
+        /* AVAILABLE — green, bright */
+        .inst-avatar.s-available {
+            border-style:solid;
+            border-color:rgba(0,214,125,0.35);
+            background:rgba(0,214,125,0.13);
+        }
+        .inst-slot.s-available .inst-label { color:var(--green); font-weight:600; }
+
+        /* UNAVAILABLE — dim */
+        .inst-avatar.s-unavailable {
+            border-style:solid;
+            border-color:rgba(255,61,107,0.18);
+            background:rgba(255,61,107,0.06);
+            opacity:.42;
+        }
+
+        /* "Me" ring */
+        .inst-avatar.is-me {
+            outline:2px solid white;
+            outline-offset:2px;
+            transform:scale(1.1);
+        }
+        .inst-avatar.s-available.is-me   { box-shadow:0 0 14px rgba(0,214,125,0.45); }
+        .inst-avatar.s-unavailable.is-me { opacity:.85; }
+        .inst-avatar.s-pending.is-me     { border-color:rgba(255,159,69,0.8); }
+
+        /* ── SUMMARY BAR ─────────────────────────────────── */
+        .summary-bar {
+            display:flex; align-items:center; gap:6px;
+            padding:9px 14px; background:var(--surface2);
+            border-radius:12px;
+        }
+        .sum-item {
+            display:flex; align-items:center; gap:5px;
+            font-size:12px; font-weight:600; flex:1; justify-content:center;
+        }
+        .sum-dot { width:7px; height:7px; border-radius:50%; }
+        .sum-dot.green { background:var(--green); }
+        .sum-dot.red   { background:var(--accent); }
+        .sum-dot.amber { background:var(--amber); }
+        .sum-item.green { color:var(--green); }
+        .sum-item.red   { color:#FF7A94; }
+        .sum-item.amber { color:var(--amber); }
+        .sum-sep { color:var(--muted2); font-size:18px; line-height:1; }
+
+        /* ── TOAST ───────────────────────────────────────── */
         .toast {
-            position: fixed;
-            bottom: 28px;
-            left: 50%;
-            transform: translateX(-50%) translateY(80px);
-            max-width: calc(100vw - 40px);
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 13px 22px;
-            border-radius: 18px;
-            font-size: 13px;
-            font-weight: 600;
-            box-shadow: 0 16px 48px rgba(0,0,0,0.6);
-            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
-            z-index: 999;
-            text-align: center;
-            white-space: nowrap;
+            position:fixed; bottom:24px; left:50%;
+            transform:translateX(-50%) translateY(90px);
+            max-width:calc(100vw - 40px); white-space:nowrap;
+            background:var(--surface2); border:1px solid var(--border);
+            color:var(--text); padding:13px 22px; border-radius:18px;
+            font-size:13px; font-weight:600;
+            box-shadow:0 16px 48px rgba(0,0,0,0.6);
+            transition:transform .35s cubic-bezier(0.34,1.56,0.64,1);
+            z-index:999; text-align:center;
         }
-        .toast.show { transform: translateX(-50%) translateY(0); }
-        .toast.ok  { border-color: rgba(0,214,125,0.4); }
-        .toast.err { border-color: rgba(255,61,107,0.4); }
+        .toast.show { transform:translateX(-50%) translateY(0); }
+        .toast.ok   { border-color:rgba(0,214,125,0.4); }
+        .toast.err  { border-color:rgba(255,61,107,0.4); }
 
-        /* ── SPINNER ─────────────────────────────────────────── */
         .spinner {
-            width: 20px; height: 20px;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
+            width:18px; height:18px;
+            border:2px solid rgba(255,255,255,0.2);
+            border-top-color:#fff; border-radius:50%;
+            animation:spin .7s linear infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin { to{transform:rotate(360deg)} }
 
-        /* ── SKELETON ─────────────────────────────────────────── */
-        .skeleton {
-            background: linear-gradient(90deg, var(--muted2) 25%, var(--surface2) 50%, var(--muted2) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 8px;
+        .empty-msg {
+            text-align:center; color:var(--muted);
+            font-size:14px; padding:32px 0;
         }
-        @keyframes shimmer { to { background-position: -200% 0; } }
     </style>
 </head>
 <body>
 
-    <!-- HEADER -->
-    <div class="header">
-        <div class="header-glow"></div>
-        <div class="header-tag">Studio Schedule</div>
-        <div class="header-title"><em>Salsa</em></div>
-        <div class="header-sub">סמן את הזמינות שלך לימי החמישי</div>
-        <div class="month-chip">
+<div class="header">
+    <div class="header-glow"></div>
+    <div class="header-tag">Studio Schedule</div>
+    <div class="header-title"><em>Salsa</em></div>
+    <div class="header-sub">זמינות מדריכים — ימי חמישי</div>
+
+    <div class="month-nav">
+        <button class="nav-btn" id="prevBtn" onclick="shiftMonth(-1)">&#8592;</button>
+        <div class="month-chip" id="monthChip">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                <rect x="3" y="4" width="18" height="18" rx="3"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
             <span id="monthLabel">טוען...</span>
         </div>
+        <button class="nav-btn" id="nextBtn" onclick="shiftMonth(1)">&#8594;</button>
     </div>
 
-    <!-- CONTENT -->
-    <div class="content">
-        <div class="section-eyebrow">מי אתה?</div>
-        <div class="name-pills" id="namePills"></div>
-
-        <div class="section-eyebrow">ימי חמישי</div>
-        <div id="datesContainer"></div>
+    <div class="archive-badge" id="archiveBadge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="21 8 21 21 3 21 3 8"/>
+            <rect x="1" y="3" width="22" height="5"/>
+            <line x1="10" y1="12" x2="14" y2="12"/>
+        </svg>
+        מצב ארכיון — צפייה בלבד
     </div>
+</div>
 
-    <!-- TOAST -->
-    <div class="toast" id="toast"></div>
+<div class="content">
+    <div class="section-label">מי אתה?</div>
+    <div class="name-pills" id="namePills"></div>
+    <div class="section-label">ימי חמישי</div>
+    <div id="datesContainer"></div>
+</div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-        import {
-            getFirestore, collection, addDoc, query,
-            where, onSnapshot, getDocs, deleteDoc, doc
-        } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+<div class="toast" id="toast"></div>
 
-        // ── Firebase config ─────────────────────────────────────
-        const app = initializeApp({
-            apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
-            authDomain: "salsaproject-aadfe.firebaseapp.com",
-            projectId: "salsaproject-aadfe",
-            storageBucket: "salsaproject-aadfe.firebasestorage.app",
-            messagingSenderId: "357758186496",
-            appId: "1:357758186496:web:dcb34b95470a68a16654e5"
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import {
+        getFirestore, collection, addDoc, query,
+        where, onSnapshot, getDocs, deleteDoc, doc
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const app = initializeApp({
+        apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
+        authDomain: "salsaproject-aadfe.firebaseapp.com",
+        projectId: "salsaproject-aadfe",
+        storageBucket: "salsaproject-aadfe.firebasestorage.app",
+        messagingSenderId: "357758186496",
+        appId: "1:357758186496:web:dcb34b95470a68a16654e5"
+    });
+    const db = getFirestore(app);
+
+    const INSTRUCTORS = ['משה','רובי','גפן','נטע','ניב','עדי'];
+    const COLORS = {
+        'משה':'#FF6B6B','רובי':'#C084FC',
+        'גפן':'#34D399', 'נטע':'#FBBF24',
+        'ניב':'#60A5FA', 'עדי':'#F472B6'
+    };
+    const HEB_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני',
+                        'יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+
+    let selectedName = null;
+    let data         = {};
+    let unsubscribe  = null;
+
+    // Determine the "active" month (data entry target)
+    function calcActiveMonth() {
+        const t = new Date();
+        let yr = t.getFullYear(), mo = t.getMonth();
+        if (t.getDate() >= 28) { mo++; if (mo>11){mo=0;yr++;} }
+        return { year:yr, month:mo };
+    }
+    const ACTIVE = calcActiveMonth();
+    let view = { ...ACTIVE };
+
+    // ── Helpers ──────────────────────────────────────────────
+    const fmtKey = d =>
+        d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'2-digit'});
+
+    function getThursdays(yr, mo) {
+        const out=[], cur=new Date(yr,mo,1), last=new Date(yr,mo+1,0);
+        while(cur.getDay()!==4) cur.setDate(cur.getDate()+1);
+        while(cur<=last){ out.push(new Date(cur)); cur.setDate(cur.getDate()+7); }
+        return out;
+    }
+
+    const isActive = vm => vm.year===ACTIVE.year && vm.month===ACTIVE.month;
+
+    function toast(msg,type='ok'){
+        const el=document.getElementById('toast');
+        el.textContent=msg; el.className=`toast ${type} show`;
+        setTimeout(()=>el.className='toast',3000);
+    }
+
+    // ── Month navigation ──────────────────────────────────────
+    window.shiftMonth = dir => {
+        let {year,month}=view;
+        month+=dir;
+        if(month<0){month=11;year--;}
+        if(month>11){month=0;year++;}
+        view={year,month};
+        renderView();
+    };
+
+    function renderView(){
+        const {year,month}=view;
+        document.getElementById('monthLabel').textContent=`${HEB_MONTHS[month]} ${year}`;
+
+        const active=isActive(view);
+        document.getElementById('monthChip').className=active?'month-chip':'month-chip archive';
+        document.getElementById('archiveBadge').className=active?'archive-badge':'archive-badge show';
+
+        // Disable going into future beyond active+1 months
+        const now=new Date();
+        const maxMo=ACTIVE.month+1>11?0:ACTIVE.month+1;
+        const maxYr=ACTIVE.month+1>11?ACTIVE.year+1:ACTIVE.year;
+        const isFuture=(year>maxYr)||(year===maxYr&&month>maxMo);
+        document.getElementById('nextBtn').disabled=isFuture;
+
+        const thursdays=getThursdays(year,month);
+        data={}; thursdays.forEach(d=>{data[fmtKey(d)]={};});
+        renderCards(thursdays,active);
+        subscribeToMonth(thursdays.map(fmtKey));
+    }
+
+    // ── Firestore ─────────────────────────────────────────────
+    function subscribeToMonth(keys){
+        if(unsubscribe){unsubscribe();unsubscribe=null;}
+        if(!keys.length) return;
+        const q=query(collection(db,'availability'),where('date','in',keys));
+        unsubscribe=onSnapshot(q,snap=>{
+            keys.forEach(k=>{data[k]={};});
+            snap.forEach(d=>{
+                const{name,date,status}=d.data();
+                if(data[date]) data[date][name]=status;
+            });
+            refreshAll(keys);
+        },err=>console.error(err));
+    }
+
+    // ── Pills ─────────────────────────────────────────────────
+    function renderPills(){
+        const wrap=document.getElementById('namePills');
+        INSTRUCTORS.forEach(name=>{
+            const btn=document.createElement('button');
+            btn.className='name-pill'; btn.textContent=name; btn.id=`pill-${name}`;
+            btn.onclick=()=>pickName(name); wrap.appendChild(btn);
         });
-        const db = getFirestore(app);
+    }
 
-        // ── Constants ───────────────────────────────────────────
-        const INSTRUCTORS = ['משה','רובי','גפן','נטע','ניב','עדי'];
-        const COLORS = {
-            'משה':'#FF6B6B', 'רובי':'#C084FC',
-            'גפן':'#34D399',  'נטע':'#FBBF24',
-            'ניב':'#60A5FA',  'עדי':'#F472B6'
-        };
-        const HEB_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני',
-                            'יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+    function pickName(name){
+        selectedName=name;
+        document.querySelectorAll('.name-pill').forEach(p=>p.classList.remove('selected'));
+        document.getElementById(`pill-${name}`).classList.add('selected');
+        refreshAll(Object.keys(data));
+    }
 
-        // ── State ───────────────────────────────────────────────
-        let selectedName = null;
-        let activeDates  = [];
-        // { dateKey: { name: 'available'|'unavailable' } }
-        let data = {};
-
-        // ── Helpers ─────────────────────────────────────────────
-        const fmtKey = d =>
-            d.toLocaleDateString('he-IL', { day:'2-digit', month:'2-digit', year:'2-digit' });
-
-        function toast(msg, type = 'ok') {
-            const el = document.getElementById('toast');
-            el.textContent = msg;
-            el.className = `toast ${type} show`;
-            setTimeout(() => el.className = 'toast', 3200);
+    // ── Cards ─────────────────────────────────────────────────
+    function renderCards(thursdays, activeMonth){
+        const wrap=document.getElementById('datesContainer');
+        wrap.innerHTML='';
+        if(!thursdays.length){
+            wrap.innerHTML='<div class="empty-msg">אין ימי חמישי בחודש זה</div>';
+            return;
         }
+        thursdays.forEach(date=>{
+            const key=fmtKey(date);
+            const card=document.createElement('div');
+            card.className='date-card'; card.id=`card-${key}`;
 
-        // ── Date logic ──────────────────────────────────────────
-        function calcActiveDates() {
-            const today = new Date();
-            today.setHours(0,0,0,0);
+            const topRight = activeMonth
+                ? `<div class="action-btns locked" id="btns-${key}">
+                       <button class="btn-avail btn-yes" id="yes-${key}" onclick="window._mark('${key}','available',this)">✓</button>
+                       <button class="btn-avail btn-no"  id="no-${key}"  onclick="window._mark('${key}','unavailable',this)">✕</button>
+                   </div>`
+                : `<div class="archive-label">ארכיון</div>`;
 
-            let yr = today.getFullYear();
-            let mo = today.getMonth();
-            if (today.getDate() >= 28) {
-                mo++;
-                if (mo > 11) { mo = 0; yr++; }
-            }
-
-            document.getElementById('monthLabel').textContent =
-                `${HEB_MONTHS[mo]} ${yr}`;
-
-            const last = new Date(yr, mo + 1, 0);
-            const cur  = new Date(yr, mo, 1);
-            while (cur.getDay() !== 4) cur.setDate(cur.getDate() + 1);
-
-            const out = [];
-            while (cur <= last) { out.push(new Date(cur)); cur.setDate(cur.getDate() + 7); }
-            return out;
-        }
-
-        // ── Name pills ──────────────────────────────────────────
-        function renderPills() {
-            const wrap = document.getElementById('namePills');
-            wrap.innerHTML = '';
-            INSTRUCTORS.forEach(name => {
-                const btn = document.createElement('button');
-                btn.className = 'name-pill';
-                btn.textContent = name;
-                btn.id = `pill-${name}`;
-                btn.onclick = () => pickName(name);
-                wrap.appendChild(btn);
-            });
-        }
-
-        function pickName(name) {
-            selectedName = name;
-            document.querySelectorAll('.name-pill')
-                .forEach(p => p.classList.remove('selected'));
-            document.getElementById(`pill-${name}`)
-                .classList.add('selected');
-            refreshAllCards();
-        }
-
-        // ── Cards ────────────────────────────────────────────────
-        function renderCards() {
-            const wrap = document.getElementById('datesContainer');
-            wrap.innerHTML = '';
-            activeDates.forEach(date => {
-                const key = fmtKey(date);
-                const card = document.createElement('div');
-                card.className = 'date-card';
-                card.id = `card-${key}`;
-
-                card.innerHTML = `
-                    <div class="card-top">
-                        <div class="date-info">
-                            <div class="date-day-tag">יום חמישי</div>
-                            <div class="date-day-num">${date.getDate()}</div>
-                            <div class="date-month-name">${HEB_MONTHS[date.getMonth()]}</div>
-                        </div>
-                        <div class="action-btns locked" id="btns-${key}">
-                            <button class="btn-avail btn-yes" id="yes-${key}"
-                                onclick="window._mark('${key}','available',this)">
-                                <span class="btn-icon">✓</span>
-                            </button>
-                            <button class="btn-avail btn-no" id="no-${key}"
-                                onclick="window._mark('${key}','unavailable',this)">
-                                <span class="btn-icon">✕</span>
-                            </button>
-                        </div>
+            card.innerHTML=`
+                <div class="card-top">
+                    <div>
+                        <div class="date-day-tag">יום חמישי</div>
+                        <div class="date-day-num">${date.getDate()}</div>
+                        <div class="date-month-name">${HEB_MONTHS[date.getMonth()]}</div>
                     </div>
-                    <div class="card-divider"></div>
-                    <div class="inst-grid">
-                        ${INSTRUCTORS.map(n => `
-                            <div class="inst-slot">
-                                <div class="inst-avatar" id="av-${key}-${n}"
-                                     style="color:${COLORS[n]}">${n.charAt(0)}</div>
-                                <div class="inst-label">${n}</div>
-                            </div>`).join('')}
-                    </div>`;
+                    ${topRight}
+                </div>
+                <div class="card-divider"></div>
+                <div class="inst-grid">
+                    ${INSTRUCTORS.map(n=>`
+                        <div class="inst-slot s-pending" id="slot-${key}-${n}">
+                            <div class="inst-avatar s-pending" id="av-${key}-${n}"
+                                 style="color:${COLORS[n]}">${n.charAt(0)}</div>
+                            <div class="inst-label">${n}</div>
+                        </div>`).join('')}
+                </div>
+                <div class="summary-bar">
+                    <div class="sum-item green"><div class="sum-dot green"></div><span id="sg-${key}">0</span> פנויים</div>
+                    <div class="sum-sep">·</div>
+                    <div class="sum-item red"><div class="sum-dot red"></div><span id="sr-${key}">0</span> לא</div>
+                    <div class="sum-sep">·</div>
+                    <div class="sum-item amber"><div class="sum-dot amber"></div><span id="sa-${key}">6 טרם ענו</span></div>
+                </div>`;
 
-                wrap.appendChild(card);
-            });
-        }
+            wrap.appendChild(card);
+        });
+    }
 
-        function refreshAllCards() {
-            activeDates.forEach(date => {
-                const key = fmtKey(date);
-                refreshAvatars(key);
-                refreshButtons(key);
-            });
-        }
+    function refreshAll(keys){
+        keys.forEach(key=>{
+            refreshAvatars(key);
+            refreshButtons(key);
+            refreshSummary(key);
+        });
+    }
 
-        function refreshAvatars(key) {
-            INSTRUCTORS.forEach(name => {
-                const el = document.getElementById(`av-${key}-${name}`);
-                if (!el) return;
-                const st = data[key]?.[name];
-                el.className = 'inst-avatar';
-                if      (st === 'available')   el.classList.add('s-available');
-                else if (st === 'unavailable') el.classList.add('s-unavailable');
-                if (name === selectedName)     el.classList.add('is-me');
-                el.style.color = (st === 'available') ? COLORS[name] : '';
-            });
-        }
+    function refreshAvatars(key){
+        INSTRUCTORS.forEach(name=>{
+            const av=document.getElementById(`av-${key}-${name}`);
+            const slot=document.getElementById(`slot-${key}-${name}`);
+            if(!av||!slot) return;
+            const st=data[key]?.[name];
 
-        function refreshButtons(key) {
-            const btns = document.getElementById(`btns-${key}`);
-            const card = document.getElementById(`card-${key}`);
-            if (!btns || !card) return;
+            av.className='inst-avatar'; slot.className='inst-slot';
 
-            const myStatus = data[key]?.[selectedName];
-
-            if (selectedName) {
-                btns.classList.remove('locked');
-                document.getElementById(`yes-${key}`).classList.toggle('active', myStatus === 'available');
-                document.getElementById(`no-${key}`).classList.toggle('active', myStatus === 'unavailable');
-                card.classList.toggle('has-my-status', !!myStatus);
+            if(st==='available'){
+                av.classList.add('s-available'); slot.classList.add('s-available');
+                av.style.color=COLORS[name];
+            } else if(st==='unavailable'){
+                av.classList.add('s-unavailable'); slot.classList.add('s-unavailable');
+                av.style.color='';
             } else {
-                btns.classList.add('locked');
-                card.classList.remove('has-my-status');
+                av.classList.add('s-pending'); slot.classList.add('s-pending');
+                av.style.color=COLORS[name];
             }
+
+            if(name===selectedName) av.classList.add('is-me');
+        });
+    }
+
+    function refreshButtons(key){
+        const btns=document.getElementById(`btns-${key}`);
+        const card=document.getElementById(`card-${key}`);
+        if(!btns||!card) return;
+        const myStatus=data[key]?.[selectedName];
+        if(selectedName){
+            btns.classList.remove('locked');
+            document.getElementById(`yes-${key}`)?.classList.toggle('active',myStatus==='available');
+            document.getElementById(`no-${key}`)?.classList.toggle('active', myStatus==='unavailable');
+            card.classList.toggle('has-my-status',!!myStatus);
+        } else {
+            btns.classList.add('locked');
+            card.classList.remove('has-my-status');
         }
+    }
 
-        // ── Firebase write ───────────────────────────────────────
-        window._mark = async (key, status, btn) => {
-            if (!selectedName) { toast('בחר שם קודם!','err'); return; }
+    function refreshSummary(key){
+        const d=data[key]||{};
+        let yes=0,no=0,pending=0;
+        INSTRUCTORS.forEach(n=>{
+            const st=d[n];
+            if(st==='available') yes++;
+            else if(st==='unavailable') no++;
+            else pending++;
+        });
+        const sg=document.getElementById(`sg-${key}`);
+        const sr=document.getElementById(`sr-${key}`);
+        const sa=document.getElementById(`sa-${key}`);
+        if(sg) sg.textContent=yes;
+        if(sr) sr.textContent=no;
+        if(sa) sa.textContent=pending>0?`${pending} טרם ענו`:'הכל בסדר ✓';
+    }
 
-            // Optimistic UI
-            const yesBtn = document.getElementById(`yes-${key}`);
-            const noBtn  = document.getElementById(`no-${key}`);
-            yesBtn.classList.toggle('active', status === 'available');
-            noBtn.classList.toggle('active',  status === 'unavailable');
-            btn.innerHTML = '<div class="spinner"></div>';
-            btn.disabled  = true;
+    // ── Write availability ────────────────────────────────────
+    window._mark = async (key,status,btn) => {
+        if(!selectedName){toast('בחר שם קודם!','err');return;}
 
-            try {
-                // Delete existing entry for this name+date
-                const existing = await getDocs(
-                    query(collection(db,'availability'),
-                          where('date','==',key),
-                          where('name','==',selectedName))
-                );
-                await Promise.all(existing.docs.map(d => deleteDoc(doc(db,'availability',d.id))));
+        const yBtn=document.getElementById(`yes-${key}`);
+        const nBtn=document.getElementById(`no-${key}`);
+        yBtn?.classList.toggle('active',status==='available');
+        nBtn?.classList.toggle('active',status==='unavailable');
 
-                // Write new
-                await addDoc(collection(db,'availability'), {
-                    name: selectedName, date: key, status,
-                    timestamp: new Date()
-                });
+        const orig=btn.innerHTML;
+        btn.innerHTML='<div class="spinner"></div>'; btn.disabled=true;
 
-                toast(status === 'available'
-                    ? `✓  ${selectedName} פנוי/ה ב-${key}`
-                    : `✕  ${selectedName} לא פנוי/ה ב-${key}`, 'ok');
-            } catch (e) {
-                toast('שגיאה בשמירה, נסה שנית','err');
-                // Revert
-                const prev = data[key]?.[selectedName];
-                yesBtn.classList.toggle('active', prev === 'available');
-                noBtn.classList.toggle('active',  prev === 'unavailable');
-            } finally {
-                const icon = btn.id.startsWith('yes') ? '✓' : '✕';
-                btn.innerHTML = `<span class="btn-icon">${icon}</span>`;
-                btn.disabled  = false;
-            }
-        };
-
-        // ── Firebase listen ──────────────────────────────────────
-        function listen() {
-            const keys = activeDates.map(fmtKey);
-            if (!keys.length) return;
-
-            // Init empty data
-            keys.forEach(k => { data[k] = data[k] || {}; });
-
-            onSnapshot(
-                query(collection(db,'availability'), where('date','in', keys)),
-                snap => {
-                    // Reset then repopulate
-                    keys.forEach(k => { data[k] = {}; });
-                    snap.forEach(d => {
-                        const { name, date, status } = d.data();
-                        if (data[date]) data[date][name] = status;
-                    });
-                    refreshAllCards();
-                },
-                err => console.error('Firestore error', err)
-            );
+        try{
+            const old=await getDocs(
+                query(collection(db,'availability'),
+                      where('date','==',key),where('name','==',selectedName)));
+            await Promise.all(old.docs.map(d=>deleteDoc(doc(db,'availability',d.id))));
+            await addDoc(collection(db,'availability'),{
+                name:selectedName,date:key,status,timestamp:new Date()
+            });
+            toast(status==='available'
+                ?`✓  ${selectedName} פנוי/ה ב-${key}`
+                :`✕  ${selectedName} לא פנוי/ה ב-${key}`,'ok');
+        } catch(e){
+            toast('שגיאה בשמירה','err');
+            const prev=data[key]?.[selectedName];
+            yBtn?.classList.toggle('active',prev==='available');
+            nBtn?.classList.toggle('active',prev==='unavailable');
+        } finally {
+            btn.innerHTML=orig; btn.disabled=false;
         }
+    };
 
-        // ── Boot ─────────────────────────────────────────────────
-        activeDates = calcActiveDates();
-        renderPills();
-        renderCards();
-        listen();
-    </script>
+    // ── Boot ─────────────────────────────────────────────────
+    renderPills();
+    renderView();
+</script>
 </body>
 </html>
