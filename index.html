@@ -2,49 +2,625 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>זמינות מדריכים</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>סלסה — זמינות</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700;1,900&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:          #0C0C10;
+            --surface:     #13131A;
+            --surface2:    #1A1A24;
+            --border:      rgba(255,255,255,0.06);
+            --accent:      #FF3D6B;
+            --accent-dim:  rgba(255,61,107,0.12);
+            --gold:        #F5C542;
+            --gold-dim:    rgba(245,197,66,0.1);
+            --green:       #00D67D;
+            --green-dim:   rgba(0,214,125,0.1);
+            --text:        #EEEAE4;
+            --muted:       #585669;
+            --muted2:      #35334A;
+        }
+
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100dvh;
+            padding-bottom: 60px;
+            overflow-x: hidden;
+        }
+
+        /* ── HEADER ─────────────────────────────────────────── */
+        .header {
+            padding: 48px 24px 28px;
+            text-align: center;
+            position: relative;
+        }
+        .header-glow {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,61,107,0.18) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .header-tag {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        .header-title {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 52px;
+            font-weight: 900;
+            line-height: 1;
+            background: linear-gradient(135deg, #EEEAE4 0%, rgba(238,234,228,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-title em {
+            -webkit-text-fill-color: var(--accent);
+            font-style: inherit;
+        }
+        .header-sub {
+            margin-top: 10px;
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--muted);
+            letter-spacing: 0.3px;
+        }
+        .month-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--gold-dim);
+            border: 1px solid rgba(245,197,66,0.18);
+            color: var(--gold);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 100px;
+            margin-top: 16px;
+            letter-spacing: 0.4px;
+        }
+        .month-chip svg { flex-shrink: 0; }
+
+        /* ── CONTENT ────────────────────────────────────────── */
+        .content { padding: 0 16px; }
+
+        /* ── NAME PILLS ─────────────────────────────────────── */
+        .section-eyebrow {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+        .name-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+        .name-pill {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 9px 20px;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.22s ease;
+            font-family: 'Sora', sans-serif;
+            letter-spacing: -0.2px;
+        }
+        .name-pill:active { transform: scale(0.95); }
+        .name-pill.selected {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 0 20px rgba(255,61,107,0.3);
+        }
+
+        /* ── DATE CARDS ─────────────────────────────────────── */
+        .date-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 20px;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(16px);
+            animation: cardIn 0.4s ease forwards;
+        }
+        .date-card:nth-child(1) { animation-delay: 0.05s; }
+        .date-card:nth-child(2) { animation-delay: 0.1s; }
+        .date-card:nth-child(3) { animation-delay: 0.15s; }
+        .date-card:nth-child(4) { animation-delay: 0.2s; }
+        .date-card:nth-child(5) { animation-delay: 0.25s; }
+
+        @keyframes cardIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Subtle left-edge accent line */
+        .date-card::before {
+            content: '';
+            position: absolute;
+            top: 20px; bottom: 20px; right: 0;
+            width: 3px;
+            border-radius: 2px 0 0 2px;
+            background: linear-gradient(180deg, var(--accent) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .date-card.has-my-status::before { opacity: 1; }
+
+        /* Top row */
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        .date-info {}
+        .date-day-tag {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        .date-day-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--text);
+        }
+        .date-month-name {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+            font-weight: 400;
+        }
+
+        /* Action buttons */
+        .action-btns {
+            display: flex;
+            gap: 9px;
+            transition: opacity 0.2s;
+        }
+        .action-btns.locked {
+            opacity: 0.25;
+            pointer-events: none;
+        }
+        .btn-avail {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            border: 1.5px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            background: transparent;
+            font-family: 'Sora', sans-serif;
+        }
+        .btn-avail:active { transform: scale(0.9); }
+
+        .btn-yes {
+            border-color: rgba(0,214,125,0.25);
+            color: var(--green);
+            background: var(--green-dim);
+        }
+        .btn-yes.active, .btn-yes:not(.locked):hover {
+            background: var(--green);
+            border-color: var(--green);
+            color: #fff;
+            box-shadow: 0 0 18px rgba(0,214,125,0.35);
+        }
+        .btn-no {
+            border-color: rgba(255,61,107,0.25);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+        .btn-no.active, .btn-no:not(.locked):hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 18px rgba(255,61,107,0.35);
+        }
+
+        .btn-icon { font-size: 20px; line-height: 1; }
+
+        /* Divider */
+        .card-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0 0 16px;
+        }
+
+        /* Instructor avatar grid */
+        .inst-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+        }
+        .inst-slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .inst-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1.5px solid transparent;
+            transition: all 0.25s ease;
+            background: var(--muted2);
+            color: var(--muted);
+        }
+        .inst-avatar.s-available {
+            border-color: rgba(0,214,125,0.35);
+            background: rgba(0,214,125,0.1);
+        }
+        .inst-avatar.s-unavailable {
+            border-color: rgba(255,61,107,0.25);
+            background: rgba(255,61,107,0.08);
+            color: var(--muted);
+            opacity: 0.5;
+        }
+        .inst-avatar.s-available.is-me {
+            box-shadow: 0 0 12px rgba(0,214,125,0.4);
+            transform: scale(1.08);
+        }
+        .inst-avatar.s-unavailable.is-me {
+            box-shadow: 0 0 12px rgba(255,61,107,0.3);
+            transform: scale(1.08);
+        }
+        .inst-label {
+            font-size: 9px;
+            color: var(--muted);
+            font-weight: 500;
+            text-align: center;
+        }
+
+        /* ── TOAST ──────────────────────────────────────────── */
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            max-width: calc(100vw - 40px);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 13px 22px;
+            border-radius: 18px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+            z-index: 999;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.ok  { border-color: rgba(0,214,125,0.4); }
+        .toast.err { border-color: rgba(255,61,107,0.4); }
+
+        /* ── SPINNER ─────────────────────────────────────────── */
+        .spinner {
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── SKELETON ─────────────────────────────────────────── */
+        .skeleton {
+            background: linear-gradient(90deg, var(--muted2) 25%, var(--surface2) 50%, var(--muted2) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+        @keyframes shimmer { to { background-position: -200% 0; } }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-glow"></div>
+        <div class="header-tag">Studio Schedule</div>
+        <div class="header-title"><em>Salsa</em></div>
+        <div class="header-sub">סמן את הזמינות שלך לימי החמישי</div>
+        <div class="month-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span id="monthLabel">טוען...</span>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+        <div class="section-eyebrow">מי אתה?</div>
+        <div class="name-pills" id="namePills"></div>
+
+        <div class="section-eyebrow">ימי חמישי</div>
+        <div id="datesContainer"></div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import {
+            getFirestore, collection, addDoc, query,
+            where, onSnapshot, getDocs, deleteDoc, doc
+        } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
-        const firebaseConfig = {
+        // ── Firebase config ─────────────────────────────────────
+        const app = initializeApp({
             apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
             authDomain: "salsaproject-aadfe.firebaseapp.com",
             projectId: "salsaproject-aadfe",
             storageBucket: "salsaproject-aadfe.firebasestorage.app",
             messagingSenderId: "357758186496",
             appId: "1:357758186496:web:dcb34b95470a68a16654e5"
-        };
-        const db = getFirestore(initializeApp(firebaseConfig));
+        });
+        const db = getFirestore(app);
 
-        // פונקציה לשליחת הנתונים
-        window.submitStatus = async (date, status) => {
-            const name = document.getElementById('instructorName').value;
-            if(!name) { alert("בבקשה תבחר שם!"); return; }
-            
-            await addDoc(collection(db, "availability"), { name, date, status, timestamp: new Date() });
-            alert(`מעולה ${name}, נרשם שאתה ${status === 'available' ? 'פנוי' : 'לא פנוי'} ל-${date}`);
+        // ── Constants ───────────────────────────────────────────
+        const INSTRUCTORS = ['משה','רובי','גפן','נטע','ניב','עדי'];
+        const COLORS = {
+            'משה':'#FF6B6B', 'רובי':'#C084FC',
+            'גפן':'#34D399',  'נטע':'#FBBF24',
+            'ניב':'#60A5FA',  'עדי':'#F472B6'
         };
+        const HEB_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני',
+                            'יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+
+        // ── State ───────────────────────────────────────────────
+        let selectedName = null;
+        let activeDates  = [];
+        // { dateKey: { name: 'available'|'unavailable' } }
+        let data = {};
+
+        // ── Helpers ─────────────────────────────────────────────
+        const fmtKey = d =>
+            d.toLocaleDateString('he-IL', { day:'2-digit', month:'2-digit', year:'2-digit' });
+
+        function toast(msg, type = 'ok') {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = `toast ${type} show`;
+            setTimeout(() => el.className = 'toast', 3200);
+        }
+
+        // ── Date logic ──────────────────────────────────────────
+        function calcActiveDates() {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            let yr = today.getFullYear();
+            let mo = today.getMonth();
+            if (today.getDate() >= 28) {
+                mo++;
+                if (mo > 11) { mo = 0; yr++; }
+            }
+
+            document.getElementById('monthLabel').textContent =
+                `${HEB_MONTHS[mo]} ${yr}`;
+
+            const last = new Date(yr, mo + 1, 0);
+            const cur  = new Date(yr, mo, 1);
+            while (cur.getDay() !== 4) cur.setDate(cur.getDate() + 1);
+
+            const out = [];
+            while (cur <= last) { out.push(new Date(cur)); cur.setDate(cur.getDate() + 7); }
+            return out;
+        }
+
+        // ── Name pills ──────────────────────────────────────────
+        function renderPills() {
+            const wrap = document.getElementById('namePills');
+            wrap.innerHTML = '';
+            INSTRUCTORS.forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = 'name-pill';
+                btn.textContent = name;
+                btn.id = `pill-${name}`;
+                btn.onclick = () => pickName(name);
+                wrap.appendChild(btn);
+            });
+        }
+
+        function pickName(name) {
+            selectedName = name;
+            document.querySelectorAll('.name-pill')
+                .forEach(p => p.classList.remove('selected'));
+            document.getElementById(`pill-${name}`)
+                .classList.add('selected');
+            refreshAllCards();
+        }
+
+        // ── Cards ────────────────────────────────────────────────
+        function renderCards() {
+            const wrap = document.getElementById('datesContainer');
+            wrap.innerHTML = '';
+            activeDates.forEach(date => {
+                const key = fmtKey(date);
+                const card = document.createElement('div');
+                card.className = 'date-card';
+                card.id = `card-${key}`;
+
+                card.innerHTML = `
+                    <div class="card-top">
+                        <div class="date-info">
+                            <div class="date-day-tag">יום חמישי</div>
+                            <div class="date-day-num">${date.getDate()}</div>
+                            <div class="date-month-name">${HEB_MONTHS[date.getMonth()]}</div>
+                        </div>
+                        <div class="action-btns locked" id="btns-${key}">
+                            <button class="btn-avail btn-yes" id="yes-${key}"
+                                onclick="window._mark('${key}','available',this)">
+                                <span class="btn-icon">✓</span>
+                            </button>
+                            <button class="btn-avail btn-no" id="no-${key}"
+                                onclick="window._mark('${key}','unavailable',this)">
+                                <span class="btn-icon">✕</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <div class="inst-grid">
+                        ${INSTRUCTORS.map(n => `
+                            <div class="inst-slot">
+                                <div class="inst-avatar" id="av-${key}-${n}"
+                                     style="color:${COLORS[n]}">${n.charAt(0)}</div>
+                                <div class="inst-label">${n}</div>
+                            </div>`).join('')}
+                    </div>`;
+
+                wrap.appendChild(card);
+            });
+        }
+
+        function refreshAllCards() {
+            activeDates.forEach(date => {
+                const key = fmtKey(date);
+                refreshAvatars(key);
+                refreshButtons(key);
+            });
+        }
+
+        function refreshAvatars(key) {
+            INSTRUCTORS.forEach(name => {
+                const el = document.getElementById(`av-${key}-${name}`);
+                if (!el) return;
+                const st = data[key]?.[name];
+                el.className = 'inst-avatar';
+                if      (st === 'available')   el.classList.add('s-available');
+                else if (st === 'unavailable') el.classList.add('s-unavailable');
+                if (name === selectedName)     el.classList.add('is-me');
+                el.style.color = (st === 'available') ? COLORS[name] : '';
+            });
+        }
+
+        function refreshButtons(key) {
+            const btns = document.getElementById(`btns-${key}`);
+            const card = document.getElementById(`card-${key}`);
+            if (!btns || !card) return;
+
+            const myStatus = data[key]?.[selectedName];
+
+            if (selectedName) {
+                btns.classList.remove('locked');
+                document.getElementById(`yes-${key}`).classList.toggle('active', myStatus === 'available');
+                document.getElementById(`no-${key}`).classList.toggle('active', myStatus === 'unavailable');
+                card.classList.toggle('has-my-status', !!myStatus);
+            } else {
+                btns.classList.add('locked');
+                card.classList.remove('has-my-status');
+            }
+        }
+
+        // ── Firebase write ───────────────────────────────────────
+        window._mark = async (key, status, btn) => {
+            if (!selectedName) { toast('בחר שם קודם!','err'); return; }
+
+            // Optimistic UI
+            const yesBtn = document.getElementById(`yes-${key}`);
+            const noBtn  = document.getElementById(`no-${key}`);
+            yesBtn.classList.toggle('active', status === 'available');
+            noBtn.classList.toggle('active',  status === 'unavailable');
+            btn.innerHTML = '<div class="spinner"></div>';
+            btn.disabled  = true;
+
+            try {
+                // Delete existing entry for this name+date
+                const existing = await getDocs(
+                    query(collection(db,'availability'),
+                          where('date','==',key),
+                          where('name','==',selectedName))
+                );
+                await Promise.all(existing.docs.map(d => deleteDoc(doc(db,'availability',d.id))));
+
+                // Write new
+                await addDoc(collection(db,'availability'), {
+                    name: selectedName, date: key, status,
+                    timestamp: new Date()
+                });
+
+                toast(status === 'available'
+                    ? `✓  ${selectedName} פנוי/ה ב-${key}`
+                    : `✕  ${selectedName} לא פנוי/ה ב-${key}`, 'ok');
+            } catch (e) {
+                toast('שגיאה בשמירה, נסה שנית','err');
+                // Revert
+                const prev = data[key]?.[selectedName];
+                yesBtn.classList.toggle('active', prev === 'available');
+                noBtn.classList.toggle('active',  prev === 'unavailable');
+            } finally {
+                const icon = btn.id.startsWith('yes') ? '✓' : '✕';
+                btn.innerHTML = `<span class="btn-icon">${icon}</span>`;
+                btn.disabled  = false;
+            }
+        };
+
+        // ── Firebase listen ──────────────────────────────────────
+        function listen() {
+            const keys = activeDates.map(fmtKey);
+            if (!keys.length) return;
+
+            // Init empty data
+            keys.forEach(k => { data[k] = data[k] || {}; });
+
+            onSnapshot(
+                query(collection(db,'availability'), where('date','in', keys)),
+                snap => {
+                    // Reset then repopulate
+                    keys.forEach(k => { data[k] = {}; });
+                    snap.forEach(d => {
+                        const { name, date, status } = d.data();
+                        if (data[date]) data[date][name] = status;
+                    });
+                    refreshAllCards();
+                },
+                err => console.error('Firestore error', err)
+            );
+        }
+
+        // ── Boot ─────────────────────────────────────────────────
+        activeDates = calcActiveDates();
+        renderPills();
+        renderCards();
+        listen();
     </script>
-</head>
-<body class="bg-gray-100 p-4">
-    <div class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg">
-        <h1 class="text-xl font-bold mb-4">דיווח זמינות - סלסה</h1>
-        <select id="instructorName" class="w-full p-2 border rounded mb-6">
-            <option value="">מי המדריך?</option>
-            <option>משה</option><option>רובי</option><option>גפן</option><option>נטע</option>
-        </select>
-
-        <div class="space-y-4">
-            <div class="p-3 border rounded flex justify-between items-center">
-                <span>יום חמישי 07/05</span>
-                <div class="space-x-2 space-x-reverse">
-                    <button onclick="submitStatus('07/05', 'available')" class="bg-green-500 text-white px-3 py-1 rounded text-sm">פנוי</button>
-                    <button onclick="submitStatus('07/05', 'unavailable')" class="bg-red-500 text-white px-3 py-1 rounded text-sm">לא</button>
-                </div>
-            </div>
-            </div>
-    </div>
 </body>
 </html>
