@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>זמינות מדריכים - סלסה</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        // הנתונים של הפרויקט שלך (העתקנו אותם בול)
+        const firebaseConfig = {
+            apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
+            authDomain: "salsaproject-aadfe.firebaseapp.com",
+            projectId: "salsaproject-aadfe",
+            storageBucket: "salsaproject-aadfe.firebasestorage.app",
+            messagingSenderId: "357758186496",
+            appId: "1:357758186496:web:dcb34b95470a68a16654e5",
+            measurementId: "G-G02ECQ2SXT"
+        };
+
+        // אתחול המערכת ומסד הנתונים
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // פונקציה לשמירת הנתונים כשלוחצים על הכפתור
+        window.saveAvailability = async function() {
+            const instructorName = document.getElementById('instructorName').value;
+            const isAvailable = document.getElementById('availableStatus').value;
+            const targetDate = document.getElementById('targetDate').value;
+
+            if (!instructorName || !targetDate) {
+                alert("אנא ודא שבחרת שם ותאריך.");
+                return;
+            }
+
+            const button = document.getElementById('submitBtn');
+            button.innerText = "שומר נתונים...";
+            button.disabled = true;
+
+            try {
+                // כתיבה למסד הנתונים של Firebase
+                await addDoc(collection(db, "availability"), {
+                    name: instructorName,
+                    date: targetDate,
+                    status: isAvailable,
+                    timestamp: new Date()
+                });
+                
+                alert("הזמינות נשמרה בהצלחה! תודה " + instructorName);
+                
+                // איפוס הכפתור
+                button.innerText = "שמור זמינות";
+                button.disabled = false;
+            } catch (e) {
+                console.error("שגיאה בשמירת הנתונים: ", e);
+                alert("הייתה שגיאה בשמירה. ודא שמסד הנתונים (Firestore) פתוח במצב Test Mode.");
+                button.innerText = "נסה שוב";
+                button.disabled = false;
+            }
+        };
+    </script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen font-sans">
+
+    <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md border border-gray-100">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-800">מערכת זמינות</h1>
+            <p class="text-gray-500 text-sm mt-1">צוות סלסה</p>
+        </div>
+
+        <div class="space-y-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">מי אתה?</label>
+                <select id="instructorName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="" disabled selected>בחר שם מהרשימה...</option>
+                    <option value="משה">משה</option>
+                    <option value="רובי">רובי</option>
+                    <option value="גפן">גפן</option>
+                    <option value="נטע">נטע</option>
+                    <option value="ניב">ניב</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">תאריך יום חמישי</label>
+                <input type="date" id="targetDate" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">האם אתה יכול להגיע?</label>
+                <select id="availableStatus" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="available">✅ פנוי ויכול להדריך</option>
+                    <option value="unavailable">❌ לא יכול להגיע</option>
+                    <option value="standby">⚠️ לא יכול, אבל זמין להקפצה בחירום</option>
+                </select>
+            </div>
+
+            <button id="submitBtn" onclick="saveAvailability()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 mt-4 shadow-md">
+                שמור זמינות
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>

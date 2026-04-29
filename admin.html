@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>לוח ניהול זמינות</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
+            authDomain: "salsaproject-aadfe.firebaseapp.com",
+            projectId: "salsaproject-aadfe",
+            storageBucket: "salsaproject-aadfe.firebasestorage.app",
+            messagingSenderId: "357758186496",
+            appId: "1:357758186496:web:dcb34b95470a68a16654e5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadData() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">טוען נתונים...</td></tr>';
+            
+            const querySnapshot = await getDocs(collection(db, "availability"));
+            tbody.innerHTML = '';
+            
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const row = `
+                    <tr class="border-b border-gray-200">
+                        <td class="p-3">${data.name}</td>
+                        <td class="p-3">${data.date}</td>
+                        <td class="p-3">${data.status === 'available' ? '✅ פנוי' : data.status === 'unavailable' ? '❌ לא פנוי' : '⚠️ חירום'}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+        loadData();
+    </script>
+</head>
+<body class="bg-gray-100 p-5 font-sans">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-md">
+        <h1 class="text-xl font-bold mb-5">לוח ניהול - צוות סלסה</h1>
+        <table class="w-full text-right border-collapse">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="p-3">שם</th>
+                    <th class="p-3">תאריך</th>
+                    <th class="p-3">סטטוס</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <button onclick="location.reload()" class="mt-5 w-full bg-green-600 text-white p-2 rounded">רענן נתונים</button>
+    </div>
+</body>
+</html>
