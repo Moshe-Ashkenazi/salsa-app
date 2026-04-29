@@ -216,7 +216,7 @@
             font-weight:500; text-align:center; transition:color .2s;
         }
 
-        /* PENDING — amber dashed, pulsing */
+        /* PENDING */
         .inst-avatar.s-pending {
             background:rgba(255,159,69,0.1);
             border-color:rgba(255,159,69,0.4);
@@ -230,7 +230,7 @@
         }
         .inst-slot.s-pending .inst-label { color:var(--amber); font-weight:600; }
 
-        /* AVAILABLE — green, bright */
+        /* AVAILABLE */
         .inst-avatar.s-available {
             border-style:solid;
             border-color:rgba(0,214,125,0.35);
@@ -238,7 +238,7 @@
         }
         .inst-slot.s-available .inst-label { color:var(--green); font-weight:600; }
 
-        /* UNAVAILABLE — dim */
+        /* UNAVAILABLE */
         .inst-avatar.s-unavailable {
             border-style:solid;
             border-color:rgba(255,61,107,0.18);
@@ -349,8 +349,8 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import {
-        getFirestore, collection, addDoc, query,
-        where, onSnapshot, getDocs, deleteDoc, doc
+        getFirestore, collection, query,
+        where, onSnapshot, doc, setDoc
     } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
     const app = initializeApp({
@@ -376,15 +376,19 @@
     let data         = {};
     let unsubscribe  = null;
 
-    // Determine the "active" month (data entry target)
-    function calcActiveMonth() {
+    // ── Logic: Max Allowed Month ─────────────────────────────
+    // If today is < 28th, max visible month is CURRENT month.
+    // If today is >= 28th, max visible month is NEXT month.
+    function calcMaxMonth() {
         const t = new Date();
         let yr = t.getFullYear(), mo = t.getMonth();
         if (t.getDate() >= 28) { mo++; if (mo>11){mo=0;yr++;} }
         return { year:yr, month:mo };
     }
-    const ACTIVE = calcActiveMonth();
-    let view = { ...ACTIVE };
+    
+    // The "Active" month is always the MAX allowed month.
+    const MAX_ALLOWED = calcMaxMonth();
+    let view = { ...MAX_ALLOWED };
 
     // ── Helpers ──────────────────────────────────────────────
     const fmtKey = d =>
@@ -397,7 +401,7 @@
         return out;
     }
 
-    const isActive = vm => vm.year===ACTIVE.year && vm.month===ACTIVE.month;
+    const isActive = vm => vm.year===MAX_ALLOWED.year && vm.month===MAX_ALLOWED.month;
 
     function toast(msg,type='ok'){
         const el=document.getElementById('toast');
@@ -423,12 +427,9 @@
         document.getElementById('monthChip').className=active?'month-chip':'month-chip archive';
         document.getElementById('archiveBadge').className=active?'archive-badge':'archive-badge show';
 
-        // Disable going into future beyond active+1 months
-        const now=new Date();
-        const maxMo=ACTIVE.month+1>11?0:ACTIVE.month+1;
-        const maxYr=ACTIVE.month+1>11?ACTIVE.year+1:ACTIVE.year;
-        const isFuture=(year>maxYr)||(year===maxYr&&month>maxMo);
-        document.getElementById('nextBtn').disabled=isFuture;
+        // Disable 'Next' button if we are at the MAX allowed month
+        const isMaxMonth = (year === MAX_ALLOWED.year && month === MAX_ALLOWED.month);
+        document.getElementById('nextBtn').disabled = isMaxMonth;
 
         const thursdays=getThursdays(year,month);
         data={}; thursdays.forEach(d=>{data[fmtKey(d)]={};});
@@ -501,8 +502,7 @@
                 <div class="inst-grid">
                     ${INSTRUCTORS.map(n=>`
                         <div class="inst-slot s-pending" id="slot-${key}-${n}">
-                            <div class="inst-avatar s-pending" id="av-${key}-${n}"
-                                 style="color:${COLORS[n]}">${n.charAt(0)}</div>
+                            <div class="inst-avatar s-pending" id="av-${key}-${n}">${n.charAt(0)}</div>
                             <div class="inst-label">${n}</div>
                         </div>`).join('')}
                 </div>
@@ -511,7 +511,7 @@
                     <div class="sum-sep">·</div>
                     <div class="sum-item red"><div class="sum-dot red"></div><span id="sr-${key}">0</span> לא</div>
                     <div class="sum-sep">·</div>
-                    <div class="sum-item amber"><div class="sum-dot amber"></div><span id="sa-${key}">6 טרם ענו</span></div>
+                    <div class="sum-item amber"><div class="sum-dot amber"></div><span id="sa-${key}">${INSTRUCTORS.length} טרם ענו</span></div>
                 </div>`;
 
             wrap.appendChild(card);
@@ -535,15 +535,18 @@
 
             av.className='inst-avatar'; slot.className='inst-slot';
 
+            // Safe color fallback
+            const instructorColor = COLORS[name] || '#A0A0AB';
+
             if(st==='available'){
                 av.classList.add('s-available'); slot.classList.add('s-available');
-                av.style.color=COLORS[name];
+                av.style.color = instructorColor;
             } else if(st==='unavailable'){
                 av.classList.add('s-unavailable'); slot.classList.add('s-unavailable');
                 av.style.color='';
             } else {
                 av.classList.add('s-pending'); slot.classList.add('s-pending');
-                av.style.color=COLORS[name];
+                av.style.color = instructorColor;
             }
 
             if(name===selectedName) av.classList.add('is-me');
@@ -584,7 +587,7 @@
     }
 
     // ── Write availability ────────────────────────────────────
-    window._mark = async (key,status,btn) => {
+    window._mark = async (key, status, btn) => {
         if(!selectedName){toast('בחר שם קודם!','err');return;}
 
         const yBtn=document.getElementById(`yes-${key}`);
@@ -595,18 +598,23 @@
         const orig=btn.innerHTML;
         btn.innerHTML='<div class="spinner"></div>'; btn.disabled=true;
 
+        // Clean ID for easy querying in Admin
+        const docId = `${key.replace(/\//g, '-')}_${selectedName}`;
+
         try{
-            const old=await getDocs(
-                query(collection(db,'availability'),
-                      where('date','==',key),where('name','==',selectedName)));
-            await Promise.all(old.docs.map(d=>deleteDoc(doc(db,'availability',d.id))));
-            await addDoc(collection(db,'availability'),{
-                name:selectedName,date:key,status,timestamp:new Date()
+            await setDoc(doc(db, 'availability', docId), {
+                name: selectedName,
+                date: key,
+                status: status,
+                isAssigned: false, // Preparation for the scheduling phase
+                timestamp: new Date()
             });
+            
             toast(status==='available'
                 ?`✓  ${selectedName} פנוי/ה ב-${key}`
                 :`✕  ${selectedName} לא פנוי/ה ב-${key}`,'ok');
         } catch(e){
+            console.error(e);
             toast('שגיאה בשמירה','err');
             const prev=data[key]?.[selectedName];
             yBtn?.classList.toggle('active',prev==='available');
