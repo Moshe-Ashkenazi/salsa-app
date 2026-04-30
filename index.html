@@ -362,8 +362,9 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import {
         getFirestore, collection, query,
-        where, onSnapshot, doc, getDoc, getDocs, setDoc
+        where, onSnapshot, doc, getDocs, setDoc
     } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    import { HEB_MONTHS, fmtKey, getThursdays, idDate } from "./shared.js";
 
     const app = initializeApp({
         apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
@@ -381,12 +382,10 @@
         'גפן':'#34D399', 'נטע':'#FBBF24',
         'ניב':'#60A5FA', 'עדי':'#F472B6'
     };
-    const HEB_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני',
-                        'יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-
     let selectedName = null;
     let data         = {};
     let unsubscribe  = null;
+    const pendingMarks = new Set();
 
     // ── Logic: Max Allowed Month ─────────────────────────────
     // If today is < 28th, max visible month is CURRENT month.
@@ -401,21 +400,6 @@
     // The "Active" month is always the MAX allowed month.
     const MAX_ALLOWED = calcMaxMonth();
     let view = { ...MAX_ALLOWED };
-
-    // ── Helpers ──────────────────────────────────────────────
-    const fmtKey = d => {
-        const dd = String(d.getDate()).padStart(2, '0');
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const yy = String(d.getFullYear()).slice(-2);
-        return `${dd}/${mm}/${yy}`;
-    };
-
-    function getThursdays(yr, mo) {
-        const out=[], cur=new Date(yr,mo,1), last=new Date(yr,mo+1,0);
-        while(cur.getDay()!==4) cur.setDate(cur.getDate()+1);
-        while(cur<=last){ out.push(new Date(cur)); cur.setDate(cur.getDate()+7); }
-        return out;
-    }
 
     const isActive = vm => vm.year===MAX_ALLOWED.year && vm.month===MAX_ALLOWED.month;
 
@@ -478,15 +462,19 @@
         }
         INSTRUCTORS.forEach(name=>{
             const btn=document.createElement('button');
-            btn.className='name-pill'; btn.textContent=name; btn.id=`pill-${name}`;
+            btn.className='name-pill';
+            btn.textContent=name;
+            btn.dataset.name = name;
             btn.onclick=()=>pickName(name); wrap.appendChild(btn);
         });
     }
 
     function pickName(name){
+        if (!INSTRUCTORS.includes(name)) return;
         selectedName=name;
         document.querySelectorAll('.name-pill').forEach(p=>p.classList.remove('selected'));
-        document.getElementById(`pill-${name}`).classList.add('selected');
+        const selectedPill = [...document.querySelectorAll('.name-pill')].find(p => p.dataset.name === name);
+        selectedPill?.classList.add('selected');
         refreshAll(Object.keys(data));
     }
 
@@ -629,25 +617,25 @@
 
         const yBtn=document.getElementById(`yes-${key}`);
         const nBtn=document.getElementById(`no-${key}`);
+        const docId = `${idDate(key)}_${selectedName}`;
+        if (pendingMarks.has(docId)) return;
+        pendingMarks.add(docId);
+
+        yBtn.disabled = true;
+        nBtn.disabled = true;
         yBtn?.classList.toggle('active',status==='available');
         nBtn?.classList.toggle('active',status==='unavailable');
 
         const orig=btn.innerHTML;
-        btn.innerHTML='<div class="spinner"></div>'; btn.disabled=true;
-
-        // Clean ID for easy querying in Admin
-        const docId = `${key.replace(/\//g, '-')}_${selectedName}`;
+        btn.innerHTML='<div class="spinner"></div>';
 
         try{
             const ref = doc(db, 'availability', docId);
-            const existing = await getDoc(ref);
-            const wasAssigned = existing.exists() && existing.data().isAssigned === true;
 
             await setDoc(ref, {
                 name: selectedName,
                 date: key,
                 status: status,
-                isAssigned: wasAssigned,
                 timestamp: new Date()
             }, { merge: true });
             
@@ -661,7 +649,10 @@
             yBtn?.classList.toggle('active',prev==='available');
             nBtn?.classList.toggle('active',prev==='unavailable');
         } finally {
-            btn.innerHTML=orig; btn.disabled=false;
+            pendingMarks.delete(docId);
+            btn.innerHTML=orig;
+            yBtn.disabled = false;
+            nBtn.disabled = false;
         }
     };
 

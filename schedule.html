@@ -486,6 +486,10 @@
         import {
             getFirestore, collection, query, onSnapshot, doc, getDocs, writeBatch
         } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import {
+            HEB_MONTHS, DEFAULT_SYLLABUS, fmtKey, idDate,
+            parseKeyDate, getThursdays, lessonFor as calcLessonFor
+        } from "./shared.js";
 
         const app = initializeApp({
             apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
@@ -518,15 +522,6 @@
             { id: 'dj', title: 'DJ', level: null, role: 'DJ' },
             { id: 'warmup', title: 'חימום', level: null, role: 'חימום' }
         ];
-        const HEB_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-        const DEFAULT_SYLLABUS = {
-            1: { level: 1, cycleLength: 1, anchorDate: '07/05/26', anchorLesson: 1 },
-            2: { level: 2, cycleLength: 1, anchorDate: '07/05/26', anchorLesson: 1 },
-            3: { level: 3, cycleLength: 6, anchorDate: '07/05/26', anchorLesson: 1 },
-            4: { level: 4, cycleLength: 4, anchorDate: '07/05/26', anchorLesson: 1 },
-            5: { level: 5, cycleLength: 4, anchorDate: '07/05/26', anchorLesson: 1 }
-        };
-
         let viewDate = getDefaultScheduleMonth();
         let selectedDate = null;
         let instructors = [];
@@ -535,18 +530,14 @@
         let savedAssignments = {};
         let draft = {};
         let notes = {};
+        let dirtyNotes = {};
         let draggingName = null;
         let unsubscribeAvailability = null;
         let unsubscribeAssignments = null;
         let unsubscribeNotes = null;
+        let unsubscribeInstructors = null;
+        let unsubscribeSyllabus = null;
 
-        const fmtKey = d => {
-            const dd = String(d.getDate()).padStart(2, '0');
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const yy = String(d.getFullYear()).slice(-2);
-            return `${dd}/${mm}/${yy}`;
-        };
-        const idDate = key => key.replace(/\//g, '-');
         const instructorByName = name => instructors.find(item => item.name === name);
 
         function getDefaultScheduleMonth() {
@@ -565,32 +556,8 @@
             setTimeout(() => el.classList.remove('show'), 2400);
         }
 
-        function getThursdays(year, month) {
-            const out = [];
-            const cur = new Date(year, month, 1);
-            const last = new Date(year, month + 1, 0);
-            while (cur.getDay() !== 4) cur.setDate(cur.getDate() + 1);
-            while (cur <= last) {
-                out.push(new Date(cur));
-                cur.setDate(cur.getDate() + 7);
-            }
-            return out;
-        }
-
-        function parseKeyDate(key) {
-            const parts = String(key || '').split(/[/.]/).map(Number);
-            if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
-            return new Date(2000 + parts[2], parts[1] - 1, parts[0]);
-        }
-
         function lessonFor(level, date) {
-            const setting = syllabusSettings[level] || DEFAULT_SYLLABUS[level];
-            const cycleLength = Math.max(1, Number(setting.cycleLength || 1));
-            const anchorLesson = Math.min(Math.max(1, Number(setting.anchorLesson || 1)), cycleLength);
-            const anchorDate = parseKeyDate(setting.anchorDate) || new Date(date.getFullYear(), date.getMonth(), 1);
-            const offset = Math.round((date - anchorDate) / (7 * 24 * 60 * 60 * 1000));
-            const lesson = (((anchorLesson - 1 + offset) % cycleLength) + cycleLength) % cycleLength + 1;
-            return `${level}.${lesson}`;
+            return calcLessonFor(level, date, syllabusSettings);
         }
 
         function selectedDateObj() {
@@ -620,35 +587,38 @@
         }
 
         function monthlyLoad(name) {
-            return Object.values(savedAssignments)
+            const saved = Object.values(savedAssignments)
                 .flat()
                 .filter(item => item.instructorName === name && String(item.date || '').slice(3) === String(selectedDate || '').slice(3))
                 .length;
-        }
-
-        async function loadBaseData() {
-            const [instructorSnap, syllabusSnap] = await Promise.all([
-                getDocs(collection(db, 'instructors')),
-                getDocs(collection(db, 'syllabusSettings'))
-            ]);
-
-            instructors = instructorSnap.docs
-                .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
-                .filter(item => item.active !== false && item.name)
-                .sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
-
-            const nextSyllabus = { ...DEFAULT_SYLLABUS };
-            syllabusSnap.docs.forEach(docSnap => {
-                const row = docSnap.data();
-                if (row.level) nextSyllabus[row.level] = { ...nextSyllabus[row.level], ...row };
-            });
-            syllabusSettings = nextSyllabus;
+            const draftedToday = Object.values(draft).filter(item => item === name).length;
+            return saved + draftedToday;
         }
 
         function subscribeLiveData() {
             unsubscribeAvailability?.();
             unsubscribeAssignments?.();
             unsubscribeNotes?.();
+            unsubscribeInstructors?.();
+            unsubscribeSyllabus?.();
+
+            unsubscribeInstructors = onSnapshot(query(collection(db, 'instructors')), snap => {
+                instructors = snap.docs
+                    .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
+                    .filter(item => item.active !== false && item.name)
+                    .sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
+                render();
+            });
+
+            unsubscribeSyllabus = onSnapshot(query(collection(db, 'syllabusSettings')), snap => {
+                const nextSyllabus = { ...DEFAULT_SYLLABUS };
+                snap.docs.forEach(docSnap => {
+                    const row = docSnap.data();
+                    if (row.level) nextSyllabus[row.level] = { ...nextSyllabus[row.level], ...row };
+                });
+                syllabusSettings = nextSyllabus;
+                render();
+            });
 
             unsubscribeAvailability = onSnapshot(query(collection(db, 'availability')), snap => {
                 availabilityRows = snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
@@ -681,14 +651,16 @@
         }
 
         window.shiftMonth = dir => {
+            rememberCurrentNote();
             viewDate.setMonth(viewDate.getMonth() + dir);
             const thursdays = getThursdays(viewDate.getFullYear(), viewDate.getMonth());
-            selectedDate = fmtKey(thursdays[0]);
+            selectedDate = thursdays.length ? fmtKey(thursdays[0]) : null;
             loadDraftFromSaved();
             render();
         };
 
         window.selectDate = key => {
+            rememberCurrentNote();
             selectedDate = key;
             loadDraftFromSaved();
             render();
@@ -777,16 +749,25 @@
             );
 
             slots.forEach(slot => {
+                const remainingSlots = slots.filter(item => !draft[item.id]);
                 const pick = pool
                     .filter(item => !Object.values(draft).includes(item.name))
                     .filter(item => isCertified(item, slot))
-                    .sort((a, b) => monthlyLoad(a.name) - monthlyLoad(b.name) || a.name.localeCompare(b.name, 'he'))[0];
+                    .sort((a, b) =>
+                        candidateFlexibility(a, remainingSlots) - candidateFlexibility(b, remainingSlots)
+                        || monthlyLoad(a.name) - monthlyLoad(b.name)
+                        || a.name.localeCompare(b.name, 'he')
+                    )[0];
                 if (pick) draft[slot.id] = pick.name;
             });
 
             render();
             toast('נוצרה טיוטת שיבוץ');
         };
+
+        function candidateFlexibility(instructor, slots) {
+            return slots.filter(slot => isCertified(instructor, slot)).length;
+        }
 
         function validateDraft() {
             const errors = [];
@@ -804,6 +785,10 @@
                     errors.push(`${name} שובץ ל-${slot.title} אבל לא סימן פנוי.`);
                 }
 
+                if (availability?.status === 'unavailable') {
+                    errors.push(`${name} משובץ/ת ל-${slot.title}, אבל סימן/ה עכשיו לא פנוי/ה.`);
+                }
+
                 if (!isCertified(instructor, slot)) {
                     errors.push(`${name} לא מוסמך/ת ל-${slot.title} (${slot.role}${slot.level ? `, רמה ${slot.level}` : ''}).`);
                 }
@@ -817,6 +802,11 @@
             if (!Object.values(draft).filter(Boolean).length) {
                 warnings.push('אין אף שיבוץ בטיוטה.');
             }
+
+            SLOT_DEFS.forEach(slot => {
+                const slotIsImportant = slot.role === 'מדריך מוביל' || slot.role === 'DJ' || slot.role === 'חימום';
+                if (slotIsImportant && !draft[slot.id]) warnings.push(`המשבצת "${slot.title}" עדיין ריקה.`);
+            });
 
             return { errors, warnings };
         }
@@ -871,6 +861,7 @@
                 });
 
             const note = document.getElementById('managerNote').value.trim();
+            dirtyNotes[idDate(selectedDate)] = note;
             batch.set(doc(db, 'scheduleNotes', idDate(selectedDate)), {
                 date: selectedDate,
                 note,
@@ -878,6 +869,7 @@
             }, { merge: true });
 
             await batch.commit();
+            delete dirtyNotes[idDate(selectedDate)];
             toast(warnings.length ? 'השיבוץ נשמר עם אזהרות' : 'השיבוץ נשמר');
         };
 
@@ -911,7 +903,13 @@
 
         function renderNote() {
             const input = document.getElementById('managerNote');
-            if (document.activeElement !== input) input.value = notes[idDate(selectedDate)] || '';
+            const key = idDate(selectedDate);
+            if (document.activeElement !== input) input.value = dirtyNotes[key] ?? notes[key] ?? '';
+        }
+
+        function rememberCurrentNote() {
+            const input = document.getElementById('managerNote');
+            if (input && selectedDate) dirtyNotes[idDate(selectedDate)] = input.value;
         }
 
         function renderBoard() {
@@ -988,11 +986,7 @@
             }).join('');
         }
 
-        loadBaseData().then(subscribeLiveData).catch(err => {
-            console.error(err);
-            toast('שגיאה בטעינת נתוני בסיס');
-            subscribeLiveData();
-        });
+        subscribeLiveData();
     </script>
 </body>
 </html>

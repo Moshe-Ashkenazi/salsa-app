@@ -318,8 +318,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import {
             getFirestore, collection, doc, getDocs, query, where,
-            setDoc, updateDoc, writeBatch
+            addDoc, setDoc, updateDoc, writeBatch
         } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import { DEFAULT_SYLLABUS, parseKeyDate } from "./shared.js";
 
         const app = initializeApp({
             apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
@@ -333,25 +334,14 @@
         const db = getFirestore(app);
         const ROLES = ['מדריך מוביל', 'עוזר', 'DJ', 'חימום'];
         const LEVELS = [1, 2, 3, 4, 5];
-        const DEFAULT_SYLLABUS = {
-            1: { cycleLength: 1, anchorDate: '07/05/26', anchorLesson: 1 },
-            2: { cycleLength: 1, anchorDate: '07/05/26', anchorLesson: 1 },
-            3: { cycleLength: 6, anchorDate: '07/05/26', anchorLesson: 1 },
-            4: { cycleLength: 4, anchorDate: '07/05/26', anchorLesson: 1 },
-            5: { cycleLength: 4, anchorDate: '07/05/26', anchorLesson: 1 }
-        };
-
         let instructors = [];
+        let editingInstructorId = null;
 
         function toast(message) {
             const el = document.getElementById('toast');
             el.textContent = message;
             el.classList.add('show');
             setTimeout(() => el.classList.remove('show'), 2400);
-        }
-
-        function makeId(name) {
-            return String(name).trim().replace(/\s+/g, '_');
         }
 
         function selectedValues(containerId) {
@@ -406,6 +396,7 @@
         window.editInstructor = id => {
             const item = instructors.find(row => row.id === id);
             if (!item) return;
+            editingInstructorId = id;
             document.getElementById('instructorName').value = item.name || '';
             document.getElementById('instructorActive').value = item.active === false ? 'false' : 'true';
             document.querySelectorAll('#roleChecks input').forEach(input => input.checked = (item.roles || []).includes(input.value));
@@ -472,8 +463,14 @@
                 updatedAt: new Date()
             };
 
-            await setDoc(doc(db, 'instructors', makeId(name)), data, { merge: true });
+            if (editingInstructorId) {
+                await setDoc(doc(db, 'instructors', editingInstructorId), data, { merge: true });
+            } else {
+                await addDoc(collection(db, 'instructors'), data);
+            }
+            editingInstructorId = null;
             document.getElementById('instructorName').value = '';
+            document.getElementById('instructorActive').value = 'true';
             document.querySelectorAll('#roleChecks input, #levelChecks input').forEach(input => input.checked = false);
             toast('המדריך נשמר');
             loadInstructors();
@@ -508,6 +505,11 @@
                 const cycleLength = Math.max(1, Number(document.getElementById(`cycle-${level}`).value || 1));
                 const anchorLesson = Math.max(1, Number(document.getElementById(`anchorLesson-${level}`).value || 1));
                 const anchorDate = document.getElementById(`anchorDate-${level}`).value.trim();
+
+                if (!parseKeyDate(anchorDate)) {
+                    toast(`תאריך עוגן לא תקין ברמה ${level}`);
+                    return;
+                }
 
                 await setDoc(doc(db, 'syllabusSettings', `level_${level}`), {
                     level,
