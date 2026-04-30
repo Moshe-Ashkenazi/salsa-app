@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>סלסה - כניסת מנהל</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,900&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#0C0C10; --surface:#13131A; --surface2:#1C1C27; --border:rgba(255,255,255,0.08);
+            --gold:#F5C542; --text:#EEEAE4; --muted:#777486;
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;display:grid;place-items:center;padding:18px}
+        .panel{width:min(520px,100%);background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px}
+        h1{color:var(--gold);font-family:'Playfair Display',serif;font-size:42px;font-style:italic;line-height:1;text-align:center}
+        .sub{color:var(--muted);font-size:13px;text-align:center;margin:8px 0 22px}
+        .links{display:grid;gap:10px}
+        a{display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:14px;font-size:14px;font-weight:800}
+        span{color:var(--muted);font-size:11px;font-weight:700}
+        a:hover{border-color:rgba(245,197,66,0.38)}
+    </style>
+</head>
+<body>
+    <main class="panel">
+        <h1>Admin</h1>
+        <div class="sub">מסכי ניהול בלבד</div>
+        <div class="links">
+            <a href="admin.html">בקרה ונתונים <span>דיווחים, מחיקה, מצב מערכת</span></a>
+            <a href="schedule.html">שיבוץ <span>Drag & Drop, Auto-Fill, שמירה</span></a>
+            <a href="settings.html">הגדרות <span>מדריכים, הסמכות, סילבוס</span></a>
+        </div>
+    </main>
+</body>
+</html>

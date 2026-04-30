@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>סלסה - הגדרות מערכת</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,900&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0C0C10;
+            --surface: #13131A;
+            --surface2: #1C1C27;
+            --border: rgba(255,255,255,0.08);
+            --accent: #FF3D6B;
+            --gold: #F5C542;
+            --green: #00D67D;
+            --text: #EEEAE4;
+            --muted: #777486;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100dvh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Sora', sans-serif;
+            padding: 20px 16px 44px;
+        }
+
+        .page { width: min(1080px, 100%); margin: 0 auto; }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            color: var(--gold);
+            font-family: 'Playfair Display', serif;
+            font-size: 38px;
+            font-style: italic;
+            line-height: 1;
+        }
+
+        .sub { color: var(--muted); font-size: 13px; margin-top: 5px; }
+
+        .nav-links { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 14px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .panel-head {
+            border-bottom: 1px solid var(--border);
+            padding: 15px;
+        }
+
+        .panel-title { font-size: 16px; font-weight: 800; color: var(--gold); }
+        .panel-desc { color: var(--muted); font-size: 12px; margin-top: 4px; }
+        .panel-body { padding: 15px; }
+
+        .form-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        label {
+            display: grid;
+            gap: 6px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        input, select {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 9px;
+            padding: 10px 11px;
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .checks {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .check {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 9px;
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .check input { width: auto; }
+
+        .btn {
+            border: 1px solid rgba(245,197,66,0.35);
+            background: rgba(245,197,66,0.1);
+            color: var(--gold);
+            border-radius: 9px;
+            padding: 10px 12px;
+            cursor: pointer;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .btn.secondary {
+            border-color: var(--border);
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .btn.danger {
+            border-color: rgba(255,61,107,0.35);
+            background: rgba(255,61,107,0.09);
+            color: #FF7A94;
+        }
+
+        .instructor-list {
+            display: grid;
+            gap: 9px;
+            margin-top: 14px;
+        }
+
+        .person-card {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            padding: 11px;
+        }
+
+        .person-card.inactive { opacity: 0.5; }
+        .person-name { font-size: 14px; font-weight: 900; }
+        .person-meta { color: var(--muted); font-size: 11px; margin-top: 3px; line-height: 1.55; }
+
+        .person-actions {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border-bottom: 1px solid var(--border);
+            padding: 11px 8px;
+            text-align: right;
+            font-size: 13px;
+        }
+
+        th {
+            color: var(--gold);
+            background: var(--surface2);
+            font-size: 12px;
+        }
+
+        td input {
+            min-width: 74px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 13px;
+            padding: 12px 18px;
+            font-size: 13px;
+            font-weight: 800;
+            transition: 0.25s ease;
+            z-index: 10;
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 860px) {
+            .topbar { align-items: flex-start; }
+            .grid { grid-template-columns: 1fr; }
+            .checks { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 520px) {
+            body { padding: 16px 12px 36px; }
+            h1 { font-size: 32px; }
+            .person-card { grid-template-columns: 1fr; }
+            .person-actions { justify-content: stretch; }
+            .person-actions .btn { flex: 1; }
+            th, td { font-size: 11px; padding: 9px 5px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <div class="topbar">
+            <div>
+                <h1>Settings</h1>
+                <div class="sub">מקור האמת של המדריכים והסילבוס</div>
+            </div>
+            <div class="nav-links">
+                <a href="admin-start.html">בית מנהל</a>
+            </div>
+        </div>
+
+        <div class="grid">
+            <section class="panel">
+                <div class="panel-head">
+                    <div class="panel-title">ניהול מדריכים</div>
+                    <div class="panel-desc">המדריכים הפעילים מכאן מופיעים במסך הזמינות והשיבוץ.</div>
+                </div>
+                <div class="panel-body">
+                    <div class="form-grid">
+                        <label>
+                            שם מדריך
+                            <input id="instructorName" placeholder="למשל: משה">
+                        </label>
+
+                        <label>
+                            סטטוס צוות
+                            <select id="instructorActive">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </label>
+
+                        <div>
+                            <label>תפקידים מורשים</label>
+                            <div class="checks" id="roleChecks"></div>
+                        </div>
+
+                        <div>
+                            <label>הסמכת רמות</label>
+                            <div class="checks" id="levelChecks"></div>
+                        </div>
+
+                        <button class="btn" onclick="saveInstructor()">שמור מדריך</button>
+                    </div>
+
+                    <div class="instructor-list" id="instructorList"></div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <div class="panel-title">ניהול סילבוס מחזורי</div>
+                    <div class="panel-desc">כל רמה מקבלת אורך מחזור, תאריך עוגן ושיעור עוגן.</div>
+                </div>
+                <div class="panel-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>רמה</th>
+                                <th>שיעורים במחזור</th>
+                                <th>תאריך עוגן</th>
+                                <th>שיעור עוגן</th>
+                            </tr>
+                        </thead>
+                        <tbody id="syllabusRows"></tbody>
+                    </table>
+                    <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+                        <button class="btn" onclick="saveSyllabus()">שמור סילבוס</button>
+                        <button class="btn secondary" onclick="seedDefaultSyllabus()">טען ברירת מחדל</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import {
+            getFirestore, collection, doc, getDocs, query, where,
+            setDoc, updateDoc, writeBatch
+        } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        const app = initializeApp({
+            apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
+            authDomain: "salsaproject-aadfe.firebaseapp.com",
+            projectId: "salsaproject-aadfe",
+            storageBucket: "salsaproject-aadfe.firebasestorage.app",
+            messagingSenderId: "357758186496",
+            appId: "1:357758186496:web:dcb34b95470a68a16654e5"
+        });
+
+        const db = getFirestore(app);
+        const ROLES = ['מדריך מוביל', 'עוזר', 'DJ', 'חימום'];
+        const LEVELS = [1, 2, 3, 4, 5];
+        const DEFAULT_SYLLABUS = {
+            1: { cycleLength: 1, anchorDate: '07/05/26', anchorLesson: 1 },
+            2: { cycleLength: 1, anchorDate: '07/05/26', anchorLesson: 1 },
+            3: { cycleLength: 6, anchorDate: '07/05/26', anchorLesson: 1 },
+            4: { cycleLength: 4, anchorDate: '07/05/26', anchorLesson: 1 },
+            5: { cycleLength: 4, anchorDate: '07/05/26', anchorLesson: 1 }
+        };
+
+        let instructors = [];
+
+        function toast(message) {
+            const el = document.getElementById('toast');
+            el.textContent = message;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2400);
+        }
+
+        function makeId(name) {
+            return String(name).trim().replace(/\s+/g, '_');
+        }
+
+        function selectedValues(containerId) {
+            return [...document.querySelectorAll(`#${containerId} input:checked`)].map(input => input.value);
+        }
+
+        function renderChecks() {
+            document.getElementById('roleChecks').innerHTML = ROLES.map(role => `
+                <label class="check"><input type="checkbox" value="${role}"> ${role}</label>
+            `).join('');
+
+            document.getElementById('levelChecks').innerHTML = LEVELS.map(level => `
+                <label class="check"><input type="checkbox" value="${level}"> רמה ${level}</label>
+            `).join('');
+        }
+
+        async function loadInstructors() {
+            const snap = await getDocs(collection(db, 'instructors'));
+            instructors = snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
+                .sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
+            renderInstructors();
+        }
+
+        function renderInstructors() {
+            const list = document.getElementById('instructorList');
+            if (!instructors.length) {
+                list.innerHTML = '<div class="person-card"><div class="person-meta">אין מדריכים עדיין. הוסף מדריך ראשון דרך הטופס.</div></div>';
+                return;
+            }
+
+            list.innerHTML = instructors.map(item => `
+                <div class="person-card ${item.active === false ? 'inactive' : ''}">
+                    <div>
+                        <div class="person-name">${item.name}</div>
+                        <div class="person-meta">
+                            ${item.active === false ? 'Inactive' : 'Active'} ·
+                            תפקידים: ${(item.roles || []).join(', ') || 'לא הוגדר'} ·
+                            רמות: ${(item.levels || []).join(', ') || 'לא הוגדר'}
+                        </div>
+                    </div>
+                    <div class="person-actions">
+                        <button class="btn secondary" onclick='editInstructor(${JSON.stringify(item.id)})'>ערוך</button>
+                        <button class="btn ${item.active === false ? '' : 'danger'}" onclick='toggleInstructor(${JSON.stringify(item.id)}, ${item.active !== false})'>
+                            ${item.active === false ? 'הפעל' : 'כבה'}
+                        </button>
+                        <button class="btn danger" onclick='deleteInstructorCascade(${JSON.stringify(item.id)}, ${JSON.stringify(item.name)})'>מחק</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.editInstructor = id => {
+            const item = instructors.find(row => row.id === id);
+            if (!item) return;
+            document.getElementById('instructorName').value = item.name || '';
+            document.getElementById('instructorActive').value = item.active === false ? 'false' : 'true';
+            document.querySelectorAll('#roleChecks input').forEach(input => input.checked = (item.roles || []).includes(input.value));
+            document.querySelectorAll('#levelChecks input').forEach(input => input.checked = (item.levels || []).map(String).includes(input.value));
+        };
+
+        window.toggleInstructor = async (id, isActive) => {
+            await updateDoc(doc(db, 'instructors', id), { active: !isActive });
+            toast(isActive ? 'המדריך הועבר ל-Inactive' : 'המדריך הופעל');
+            loadInstructors();
+        };
+
+        window.deleteInstructorCascade = async (id, name) => {
+            const ok = confirm(`למחוק את ${name} מהמדריכים וגם למחוק את כל הזמינויות והשיבוצים שלו/ה? הפעולה לא ניתנת לביטול.`);
+            if (!ok) return;
+
+            try {
+                let batch = writeBatch(db);
+                let pending = 0;
+                let deleted = 0;
+
+                const enqueueDelete = async (snap) => {
+                    for (const docSnap of snap.docs) {
+                        batch.delete(docSnap.ref);
+                        pending++;
+                        deleted++;
+
+                        if (pending === 450) {
+                            await batch.commit();
+                            batch = writeBatch(db);
+                            pending = 0;
+                        }
+                    }
+                };
+
+                await enqueueDelete(await getDocs(query(collection(db, 'availability'), where('name', '==', name))));
+                await enqueueDelete(await getDocs(query(collection(db, 'scheduleAssignments'), where('instructorName', '==', name))));
+
+                batch.delete(doc(db, 'instructors', id));
+                pending++;
+                deleted++;
+
+                if (pending > 0) await batch.commit();
+                toast(`${name} נמחק/ה יחד עם ${deleted - 1} רשומות קשורות`);
+                loadInstructors();
+            } catch (err) {
+                console.error(err);
+                toast('שגיאה במחיקת המדריך');
+            }
+        };
+
+        window.saveInstructor = async () => {
+            const name = document.getElementById('instructorName').value.trim();
+            if (!name) {
+                toast('צריך להזין שם מדריך');
+                return;
+            }
+
+            const data = {
+                name,
+                roles: selectedValues('roleChecks'),
+                levels: selectedValues('levelChecks').map(Number),
+                active: document.getElementById('instructorActive').value === 'true',
+                updatedAt: new Date()
+            };
+
+            await setDoc(doc(db, 'instructors', makeId(name)), data, { merge: true });
+            document.getElementById('instructorName').value = '';
+            document.querySelectorAll('#roleChecks input, #levelChecks input').forEach(input => input.checked = false);
+            toast('המדריך נשמר');
+            loadInstructors();
+        };
+
+        function renderSyllabusRows(settings = DEFAULT_SYLLABUS) {
+            document.getElementById('syllabusRows').innerHTML = LEVELS.map(level => {
+                const row = settings[level] || DEFAULT_SYLLABUS[level];
+                return `
+                    <tr>
+                        <td><strong>רמה ${level}</strong></td>
+                        <td><input id="cycle-${level}" type="number" min="1" max="30" value="${row.cycleLength || 1}"></td>
+                        <td><input id="anchorDate-${level}" placeholder="DD/MM/YY" value="${row.anchorDate || ''}"></td>
+                        <td><input id="anchorLesson-${level}" type="number" min="1" max="30" value="${row.anchorLesson || 1}"></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function loadSyllabus() {
+            const snap = await getDocs(collection(db, 'syllabusSettings'));
+            const settings = { ...DEFAULT_SYLLABUS };
+            snap.docs.forEach(docSnap => {
+                const row = docSnap.data();
+                settings[row.level] = row;
+            });
+            renderSyllabusRows(settings);
+        }
+
+        window.saveSyllabus = async () => {
+            for (const level of LEVELS) {
+                const cycleLength = Math.max(1, Number(document.getElementById(`cycle-${level}`).value || 1));
+                const anchorLesson = Math.max(1, Number(document.getElementById(`anchorLesson-${level}`).value || 1));
+                const anchorDate = document.getElementById(`anchorDate-${level}`).value.trim();
+
+                await setDoc(doc(db, 'syllabusSettings', `level_${level}`), {
+                    level,
+                    cycleLength,
+                    anchorDate,
+                    anchorLesson: Math.min(anchorLesson, cycleLength),
+                    updatedAt: new Date()
+                }, { merge: true });
+            }
+            toast('הסילבוס נשמר');
+        };
+
+        window.seedDefaultSyllabus = async () => {
+            for (const level of LEVELS) {
+                await setDoc(doc(db, 'syllabusSettings', `level_${level}`), {
+                    level,
+                    ...DEFAULT_SYLLABUS[level],
+                    updatedAt: new Date()
+                }, { merge: true });
+            }
+            toast('סילבוס ברירת מחדל נטען');
+            loadSyllabus();
+        };
+
+        renderChecks();
+        loadInstructors();
+        loadSyllabus();
+    </script>
+</body>
+</html>

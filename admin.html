@@ -43,6 +43,74 @@
         .nav-btn:hover { background: var(--surface2); border-color: var(--gold); }
         #currentMonth { font-weight: bold; font-size: 18px; line-height: 38px; min-width: 120px; text-align: center;}
 
+        .admin-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: -14px 0 24px;
+        }
+        .schedule-link {
+            background: rgba(245,197,66,0.09);
+            border: 1px solid rgba(245,197,66,0.28);
+            color: var(--gold);
+            border-radius: 8px;
+            padding: 9px 14px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .danger-btn {
+            background: rgba(255,61,107,0.08);
+            border: 1px solid rgba(255,61,107,0.28);
+            color: #FF7A94;
+            border-radius: 8px;
+            padding: 9px 14px;
+            cursor: pointer;
+            font-family: 'Sora', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+        .danger-btn:hover {
+            background: rgba(255,61,107,0.14);
+            border-color: rgba(255,61,107,0.5);
+            color: var(--text);
+        }
+        .danger-btn:disabled {
+            opacity: 0.45;
+            cursor: wait;
+        }
+
+        /* Overview */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 0 auto 18px;
+            max-width: 880px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 13px 14px;
+        }
+        .stat-label {
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .stat-value.green { color: var(--green); }
+        .stat-value.gold { color: var(--gold); }
+        .stat-value.red { color: var(--accent); }
+        .stat-value.amber { color: var(--amber); }
+
         /* Table */
         .admin-table-wrapper {
             background: var(--surface); border: 1px solid var(--border);
@@ -61,6 +129,7 @@
         }
         .status-avail { background: rgba(0,214,125,0.1); color: var(--green); border: 1px solid rgba(0,214,125,0.2); }
         .status-unavail { background: rgba(255,61,107,0.1); color: var(--accent); border: 1px solid rgba(255,61,107,0.2); }
+        .status-backup { background: rgba(255,159,69,0.1); color: var(--amber); border: 1px solid rgba(255,159,69,0.2); }
 
         /* Assign Button (Mockup for now) */
         .btn-assign {
@@ -69,8 +138,36 @@
         }
         .btn-assign:hover { border-color: var(--gold); color: var(--gold); }
         .btn-assign.assigned { background: var(--gold); border-color: var(--gold); color: var(--bg); font-weight: bold; }
+        .btn-assign:disabled {
+            opacity: 0.35; cursor: not-allowed; border-color: var(--border); color: var(--muted);
+        }
+        .btn-assign:disabled:hover { border-color: var(--border); color: var(--muted); }
+        tr.assigned-row { background: rgba(245,197,66,0.045); }
+        tr.backup-row td { color: rgba(238,234,228,0.72); }
+        .date-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .date-meta {
+            color: var(--muted);
+            font-size: 11px;
+        }
+        .assigned-names {
+            color: var(--gold);
+            font-size: 11px;
+            font-weight: 600;
+        }
         
         .loading { text-align: center; padding: 30px; color: var(--muted); }
+
+        @media (max-width: 720px) {
+            body { padding: 14px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            th, td { padding: 12px 10px; font-size: 12px; }
+            .nav-bar { gap: 8px; }
+            .nav-btn { padding: 8px 10px; }
+        }
     </style>
 </head>
 <body>
@@ -84,6 +181,32 @@
         <button class="nav-btn" onclick="changeMonth(-1)">&#8594; הקודם</button>
         <div id="currentMonth">טוען...</div>
         <button class="nav-btn" onclick="changeMonth(1)">הבא &#8592;</button>
+    </div>
+
+    <div class="admin-actions">
+        <a class="schedule-link" href="admin-start.html">בית מנהל</a>
+        <button class="danger-btn" id="clearAvailabilityBtn" onclick="clearAllAvailability(this)">
+            איפוס זמינויות ושיבוצים
+        </button>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">דיווחים החודש</div>
+            <div class="stat-value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">פנויים</div>
+            <div class="stat-value green" id="statAvailable">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">משובצים</div>
+            <div class="stat-value gold" id="statAssigned">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">לא פנויים</div>
+            <div class="stat-value red" id="statUnavailable">0</div>
+        </div>
     </div>
 
     <div class="admin-table-wrapper">
@@ -104,7 +227,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-        import { getFirestore, collection, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import {
+            getFirestore, collection, query, onSnapshot, orderBy,
+            doc, updateDoc, getDocs, writeBatch
+        } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
         const app = initializeApp({
             apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
@@ -125,6 +251,66 @@
             renderMonth();
         };
 
+        window.toggleAssign = async (docId, currentlyAssigned, status, btn) => {
+            if (status !== 'available') return;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'שומר...';
+
+            try {
+                await updateDoc(doc(db, 'availability', docId), {
+                    isAssigned: !currentlyAssigned
+                });
+            } catch (err) {
+                console.error(err);
+                btn.disabled = false;
+                btn.textContent = originalText;
+                alert('שגיאה בעדכון השיבוץ');
+            }
+        };
+
+        window.clearAllAvailability = async (btn) => {
+            const ok = confirm('למחוק את כל דיווחי הזמינות, השיבוצים והערות המנהל? מדריכים וסילבוס לא יימחקו. הפעולה לא ניתנת לביטול.');
+            if (!ok) return;
+
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'מוחק...';
+
+            try {
+                let batch = writeBatch(db);
+                let pending = 0;
+                let deleted = 0;
+
+                const collectionsToClear = ['availability', 'scheduleAssignments', 'scheduleNotes'];
+
+                for (const collectionName of collectionsToClear) {
+                    const snap = await getDocs(collection(db, collectionName));
+
+                    for (const docSnap of snap.docs) {
+                        batch.delete(doc(db, collectionName, docSnap.id));
+                        pending++;
+                        deleted++;
+
+                        if (pending === 450) {
+                            await batch.commit();
+                            batch = writeBatch(db);
+                            pending = 0;
+                        }
+                    }
+                }
+
+                if (pending > 0) await batch.commit();
+                alert(deleted ? 'הזמינויות, השיבוצים והערות המנהל נמחקו בהצלחה.' : 'אין נתוני זמינות או שיבוץ למחיקה.');
+            } catch (err) {
+                console.error(err);
+                alert('שגיאה באיפוס הזמינויות והשיבוצים.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        };
+
         function renderMonth() {
             document.getElementById('currentMonth').innerText = `${HEB_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
             fetchDataForMonth();
@@ -141,43 +327,96 @@
                 const tbody = document.getElementById('tableBody');
                 tbody.innerHTML = '';
                 
-                let hasData = false;
+                const rows = [];
                 const currentMonthStr = (currentDate.getMonth() + 1).toString().padStart(2, '0');
                 const currentYearStr = currentDate.getFullYear().toString().slice(-2);
 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
                     
                     // בדיקה אם הנתון שייך לחודש המוצג (לפי פורמט dd/mm/yy)
-                    const dateParts = data.date.split('/');
+                    const dateParts = data.date.split(/[/.]/);
                     if(dateParts.length === 3 && dateParts[1] === currentMonthStr && dateParts[2] === currentYearStr) {
-                        hasData = true;
-                        
+                        rows.push({
+                            id: docSnap.id,
+                            ...data,
+                            day: Number(dateParts[0])
+                        });
+                    }
+                });
+
+                renderStats(rows);
+
+                if (!rows.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="loading">אין דיווחים לחודש זה.</td></tr>';
+                    return;
+                }
+
+                const assignedByDate = rows.reduce((acc, item) => {
+                    if (item.isAssigned === true) {
+                        if (!acc[item.date]) acc[item.date] = [];
+                        acc[item.date].push(item.name);
+                    }
+                    return acc;
+                }, {});
+
+                rows
+                    .sort((a, b) => a.day - b.day || String(a.name).localeCompare(String(b.name), 'he'))
+                    .forEach((data) => {
+                        const assignedNames = assignedByDate[data.date] || [];
+                        const hasAssignedForDate = assignedNames.length > 0;
+                        const isAvailable = data.status === 'available';
+                        const isAssigned = data.isAssigned === true;
+                        const isBackup = isAvailable && !isAssigned && hasAssignedForDate;
+
                         let statusHtml = '';
-                        if(data.status === 'available') statusHtml = '<span class="status-badge status-avail">פנוי</span>';
-                        else if(data.status === 'unavailable') statusHtml = '<span class="status-badge status-unavail">לא פנוי</span>';
+                        if (isAssigned) statusHtml = '<span class="status-badge status-avail">משובץ בפועל</span>';
+                        else if (isBackup) statusHtml = '<span class="status-badge status-backup">גיבוי פנוי</span>';
+                        else if (data.status === 'available') statusHtml = '<span class="status-badge status-avail">פנוי</span>';
+                        else if (data.status === 'unavailable') statusHtml = '<span class="status-badge status-unavail">לא פנוי</span>';
                         else statusHtml = '<span class="status-badge" style="color:var(--amber)">ממתין</span>';
 
+                        const docIdArg = JSON.stringify(data.id);
+                        const statusArg = JSON.stringify(data.status || '');
+                        const assignDisabled = isAvailable ? '' : 'disabled title="אי אפשר לשבץ מדריך שלא סימן פנוי"';
+                        const assignedText = assignedNames.length ? `משובצים: ${assignedNames.join(', ')}` : 'אין שיבוץ עדיין';
+
                         const tr = document.createElement('tr');
+                        if (isAssigned) tr.classList.add('assigned-row');
+                        if (isBackup) tr.classList.add('backup-row');
                         tr.innerHTML = `
-                            <td>${data.date}</td>
+                            <td>
+                                <div class="date-cell">
+                                    <strong>${data.date}</strong>
+                                    <span class="date-meta">${assignedNames.length ? 'יום סגור חלקית' : 'פתוח לשיבוץ'}</span>
+                                    <span class="assigned-names">${assignedText}</span>
+                                </div>
+                            </td>
                             <td><strong>${data.name}</strong></td>
                             <td>${statusHtml}</td>
                             <td>
-                                <button class="btn-assign ${data.isAssigned ? 'assigned' : ''}" 
-                                        onclick="alert('פיצ\\'ר השיבוץ ייבנה בשלב הבא!')">
-                                    ${data.isAssigned ? '✓ משובץ' : 'שבץ'}
+                                <button class="btn-assign ${isAssigned ? 'assigned' : ''}"
+                                        ${assignDisabled}
+                                        onclick='window.toggleAssign(${docIdArg}, ${isAssigned}, ${statusArg}, this)'>
+                                    ${isAssigned ? '✓ משובץ' : 'שבץ'}
                                 </button>
                             </td>
                         `;
                         tbody.appendChild(tr);
-                    }
-                });
-
-                if (!hasData) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="loading">אין דיווחים לחודש זה.</td></tr>';
-                }
+                    });
             });
+        }
+
+        function renderStats(rows) {
+            const total = rows.length;
+            const available = rows.filter(item => item.status === 'available').length;
+            const assigned = rows.filter(item => item.isAssigned === true).length;
+            const unavailable = rows.filter(item => item.status === 'unavailable').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statAvailable').textContent = available;
+            document.getElementById('statAssigned').textContent = assigned;
+            document.getElementById('statUnavailable').textContent = unavailable;
         }
 
         renderMonth();

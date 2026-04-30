@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>סלסה - לוח צוות</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,900&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#0C0C10; --surface:#13131A; --surface2:#1C1C27; --border:rgba(255,255,255,0.08);
+            --gold:#F5C542; --green:#00D67D; --text:#EEEAE4; --muted:#777486;
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;padding:18px}
+        .page{width:min(980px,100%);margin:0 auto}
+        .topbar{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:18px}
+        h1{color:var(--gold);font-family:'Playfair Display',serif;font-size:38px;font-style:italic;line-height:1}
+        .sub{color:var(--muted);font-size:13px;margin-top:5px}
+        .link{color:var(--text);text-decoration:none;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800}
+        .month-nav,.date-tabs,.note,.grid-card{background:var(--surface);border:1px solid var(--border);border-radius:13px}
+        .month-nav{display:flex;justify-content:center;align-items:center;gap:10px;padding:10px;margin-bottom:10px}
+        button{font:inherit;cursor:pointer;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:12px;font-weight:800}
+        .month-label{min-width:150px;text-align:center;color:var(--gold);font-weight:900}
+        .date-tabs{display:flex;gap:8px;overflow:auto;padding:10px;margin-bottom:12px}
+        .date-tab{min-width:94px}
+        .date-tab.active{color:var(--gold);border-color:rgba(245,197,66,0.4);background:rgba(245,197,66,0.09)}
+        .note{padding:14px;margin-bottom:12px;color:var(--gold);font-size:13px;font-weight:800;line-height:1.55}
+        .note.empty{color:var(--muted)}
+        .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+        .grid-card{overflow:hidden}
+        .card-head{padding:13px;border-bottom:1px solid var(--border)}
+        .slot-title{color:var(--gold);font-size:18px;font-weight:900}
+        .slot-meta{color:var(--muted);font-size:11px;margin-top:4px}
+        .card-body{padding:13px;display:grid;gap:9px}
+        .teacher-row{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:11px}
+        .role-label{color:var(--muted);font-size:11px;font-weight:900}
+        .teacher{font-size:17px;font-weight:900}
+        .teacher.empty{color:var(--muted);font-size:13px}
+        .pill{display:inline-block;margin-top:4px;color:var(--green);border:1px solid rgba(0,214,125,0.25);background:rgba(0,214,125,0.08);border-radius:100px;padding:4px 8px;font-size:10px;font-weight:900}
+        @media(max-width:720px){body{padding:14px 11px}.topbar{flex-direction:column}.grid{grid-template-columns:1fr}h1{font-size:32px}}
+    </style>
+</head>
+<body>
+    <main class="page">
+        <div class="topbar">
+            <div>
+                <h1>Team Board</h1>
+                <div class="sub">לוח שיבוץ נקי לצוות</div>
+            </div>
+            <a class="link" href="index.html">מילוי זמינות</a>
+        </div>
+
+        <div class="month-nav">
+            <button onclick="shiftMonth(-1)">&#8594; הקודם</button>
+            <div class="month-label" id="monthLabel">טוען...</div>
+            <button onclick="shiftMonth(1)">הבא &#8592;</button>
+        </div>
+        <div class="date-tabs" id="dateTabs"></div>
+        <div class="note empty" id="managerNote">אין הערת מנהל לתאריך הזה</div>
+        <section class="grid" id="teamGrid"></section>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getFirestore, collection, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        const app = initializeApp({
+            apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
+            authDomain: "salsaproject-aadfe.firebaseapp.com",
+            projectId: "salsaproject-aadfe",
+            storageBucket: "salsaproject-aadfe.firebasestorage.app",
+            messagingSenderId: "357758186496",
+            appId: "1:357758186496:web:dcb34b95470a68a16654e5"
+        });
+        const db = getFirestore(app);
+        const HEB_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+        const LEVELS = [5, 4, 3, 2, 1];
+        const DEFAULT_SYLLABUS = {
+            1: { level: 1, cycleLength: 1, anchorDate: '07/05/26', anchorLesson: 1 },
+            2: { level: 2, cycleLength: 1, anchorDate: '07/05/26', anchorLesson: 1 },
+            3: { level: 3, cycleLength: 6, anchorDate: '07/05/26', anchorLesson: 1 },
+            4: { level: 4, cycleLength: 4, anchorDate: '07/05/26', anchorLesson: 1 },
+            5: { level: 5, cycleLength: 4, anchorDate: '07/05/26', anchorLesson: 1 }
+        };
+        const EXTRA_SLOTS = [
+            { id: 'warmup', title: 'חימום', role: 'חימום' },
+            { id: 'dj', title: 'DJ', role: 'DJ' }
+        ];
+
+        const fmtKey = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;
+        const idDate = key => key.replace(/\//g, '-');
+
+        let viewDate = getDefaultThursday();
+        let selectedDate = fmtKey(viewDate);
+        let assignments = {};
+        let notes = {};
+        let syllabusSettings = { ...DEFAULT_SYLLABUS };
+
+        function getDefaultThursday() {
+            const today = new Date();
+            const day = today.getDay();
+            const offset = day <= 4 ? 4 - day : 11 - day;
+            const target = new Date(today);
+            target.setDate(today.getDate() + offset);
+            target.setHours(12, 0, 0, 0);
+            return target;
+        }
+
+        function getThursdays(year, month) {
+            const out=[], cur=new Date(year,month,1), last=new Date(year,month+1,0);
+            while(cur.getDay()!==4) cur.setDate(cur.getDate()+1);
+            while(cur<=last){ out.push(new Date(cur)); cur.setDate(cur.getDate()+7); }
+            return out;
+        }
+
+        function parseKeyDate(key) {
+            const parts = String(key || '').split(/[/.]/).map(Number);
+            if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+            return new Date(2000 + parts[2], parts[1] - 1, parts[0]);
+        }
+
+        function lessonFor(level, date) {
+            const setting = syllabusSettings[level] || DEFAULT_SYLLABUS[level];
+            const cycleLength = Math.max(1, Number(setting.cycleLength || 1));
+            const anchorLesson = Math.min(Math.max(1, Number(setting.anchorLesson || 1)), cycleLength);
+            const anchorDate = parseKeyDate(setting.anchorDate) || new Date(date.getFullYear(), date.getMonth(), 1);
+            const offset = Math.round((date - anchorDate) / (7 * 24 * 60 * 60 * 1000));
+            const lesson = (((anchorLesson - 1 + offset) % cycleLength) + cycleLength) % cycleLength + 1;
+            return `${level}.${lesson}`;
+        }
+
+        window.shiftMonth = dir => {
+            viewDate.setMonth(viewDate.getMonth()+dir);
+            const days = getThursdays(viewDate.getFullYear(), viewDate.getMonth());
+            selectedDate = fmtKey(days[0]);
+            render();
+        };
+
+        window.selectDate = key => { selectedDate = key; render(); };
+
+        function render() {
+            const days = getThursdays(viewDate.getFullYear(), viewDate.getMonth());
+            if (!selectedDate && days.length) selectedDate = fmtKey(days[0]);
+            document.getElementById('monthLabel').textContent = `${HEB_MONTHS[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
+            document.getElementById('dateTabs').innerHTML = days.map(date => {
+                const key = fmtKey(date);
+                return `<button class="date-tab ${key===selectedDate?'active':''}" onclick='selectDate(${JSON.stringify(key)})'>${date.getDate()} ${HEB_MONTHS[date.getMonth()]}</button>`;
+            }).join('');
+
+            const note = notes[idDate(selectedDate)] || '';
+            const noteEl = document.getElementById('managerNote');
+            noteEl.textContent = note || 'אין הערת מנהל לתאריך הזה';
+            noteEl.classList.toggle('empty', !note);
+
+            const rows = assignments[selectedDate] || [];
+            const selectedDateObj = parseKeyDate(selectedDate);
+            const levelCards = LEVELS.map(level => {
+                const lead = rows.find(row => row.slotId === `level_${level}_lead`);
+                const assistant = rows.find(row => row.slotId === `level_${level}_assistant`);
+                return renderLevelCard(level, lead, assistant, selectedDateObj);
+            }).join('');
+
+            const extras = EXTRA_SLOTS
+                .map(slot => renderExtraCard(slot, rows.find(row => row.slotId === slot.id)))
+                .join('');
+
+            document.getElementById('teamGrid').innerHTML = levelCards + extras;
+        }
+
+        function renderLevelCard(level, lead, assistant, selectedDateObj) {
+            const lessonCode = selectedDateObj ? lessonFor(level, selectedDateObj) : (lead?.lessonCode || assistant?.lessonCode || `רמה ${level}`);
+            return `
+                <article class="grid-card">
+                    <div class="card-head">
+                        <div class="slot-title">רמה ${level}</div>
+                        <div class="slot-meta">שיעור ${lessonCode}</div>
+                    </div>
+                    <div class="card-body">
+                        ${renderTeacherRow('מדריך', lead?.instructorName)}
+                        ${renderTeacherRow('עוזר', assistant?.instructorName)}
+                    </div>
+                </article>
+            `;
+        }
+
+        function renderTeacherRow(role, name) {
+            return `
+                <div class="teacher-row">
+                    <div class="role-label">${role}</div>
+                    <div>
+                        <div class="teacher ${name ? '' : 'empty'}">${name || 'לא שובץ'}</div>
+                        ${name ? '<span class="pill">משובץ</span>' : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderExtraCard(slot, row) {
+            return `
+                <article class="grid-card">
+                    <div class="card-head">
+                        <div class="slot-title">${slot.title}</div>
+                        <div class="slot-meta">${slot.role}</div>
+                    </div>
+                    <div class="card-body">
+                        ${renderTeacherRow('אחראי', row?.instructorName)}
+                    </div>
+                </article>
+            `;
+        }
+
+        onSnapshot(query(collection(db, 'scheduleAssignments')), snap => {
+            assignments = {};
+            snap.docs.forEach(docSnap => {
+                const row = docSnap.data();
+                if (!assignments[row.date]) assignments[row.date] = [];
+                assignments[row.date].push(row);
+            });
+            render();
+        });
+
+        onSnapshot(query(collection(db, 'scheduleNotes')), snap => {
+            notes = {};
+            snap.docs.forEach(docSnap => notes[docSnap.id] = docSnap.data().note || '');
+            render();
+        });
+
+        onSnapshot(query(collection(db, 'syllabusSettings')), snap => {
+            const next = { ...DEFAULT_SYLLABUS };
+            snap.docs.forEach(docSnap => {
+                const row = docSnap.data();
+                if (row.level) next[row.level] = { ...next[row.level], ...row };
+            });
+            syllabusSettings = next;
+            render();
+        });
+    </script>
+</body>
+</html>

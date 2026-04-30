@@ -14,6 +14,8 @@
             --accent:     #FF3D6B;
             --gold:       #F5C542;
             --green:      #00D67D;
+            --red:        #FF3D6B;
+            --pending:    #8D8D9B;
             --amber:      #FF9F45;
             --text:       #EEEAE4;
             --muted:      #585669;
@@ -55,6 +57,14 @@
         }
         .header-title em { -webkit-text-fill-color: var(--accent); }
         .header-sub { margin-top: 8px; font-size: 13px; color: var(--muted); font-weight: 400; }
+        .team-link {
+            display: inline-flex; align-items: center; justify-content: center;
+            margin-top: 14px; text-decoration: none;
+            border: 1px solid rgba(245,197,66,0.22);
+            background: rgba(245,197,66,0.07);
+            color: var(--gold); font-size: 12px; font-weight: 700;
+            padding: 9px 16px; border-radius: 100px;
+        }
 
         /* ── MONTH NAV ───────────────────────────────────── */
         .month-nav {
@@ -218,33 +228,34 @@
 
         /* PENDING */
         .inst-avatar.s-pending {
-            background:rgba(255,159,69,0.1);
-            border-color:rgba(255,159,69,0.4);
-            border-style:dashed;
-            color:var(--amber);
-            animation:pendingPulse 2.4s ease-in-out infinite;
+            background:rgba(141,141,155,0.13);
+            border-color:rgba(141,141,155,0.55);
+            border-style:solid;
+            color:var(--pending);
+            opacity:0.9;
         }
-        @keyframes pendingPulse {
-            0%,100%{box-shadow:0 0 0 0 rgba(255,159,69,0)}
-            50%    {box-shadow:0 0 0 4px rgba(255,159,69,0.13)}
-        }
-        .inst-slot.s-pending .inst-label { color:var(--amber); font-weight:600; }
+        .inst-slot.s-pending .inst-label { color:var(--pending); font-weight:600; }
 
         /* AVAILABLE */
         .inst-avatar.s-available {
             border-style:solid;
-            border-color:rgba(0,214,125,0.35);
-            background:rgba(0,214,125,0.13);
+            border-color:var(--green);
+            background:rgba(0,214,125,0.24);
+            color:var(--green);
+            box-shadow:0 0 14px rgba(0,214,125,0.2);
         }
         .inst-slot.s-available .inst-label { color:var(--green); font-weight:600; }
 
         /* UNAVAILABLE */
         .inst-avatar.s-unavailable {
             border-style:solid;
-            border-color:rgba(255,61,107,0.18);
-            background:rgba(255,61,107,0.06);
-            opacity:.42;
+            border-color:var(--red);
+            background:rgba(255,61,107,0.18);
+            color:#FF6F8C;
+            opacity:1;
+            box-shadow:0 0 12px rgba(255,61,107,0.12);
         }
+        .inst-slot.s-unavailable .inst-label { color:#FF6F8C; font-weight:600; }
 
         /* "Me" ring */
         .inst-avatar.is-me {
@@ -253,8 +264,8 @@
             transform:scale(1.1);
         }
         .inst-avatar.s-available.is-me   { box-shadow:0 0 14px rgba(0,214,125,0.45); }
-        .inst-avatar.s-unavailable.is-me { opacity:.85; }
-        .inst-avatar.s-pending.is-me     { border-color:rgba(255,159,69,0.8); }
+        .inst-avatar.s-unavailable.is-me { box-shadow:0 0 14px rgba(255,61,107,0.32); }
+        .inst-avatar.s-pending.is-me     { border-color:rgba(255,255,255,0.8); }
 
         /* ── SUMMARY BAR ─────────────────────────────────── */
         .summary-bar {
@@ -268,11 +279,11 @@
         }
         .sum-dot { width:7px; height:7px; border-radius:50%; }
         .sum-dot.green { background:var(--green); }
-        .sum-dot.red   { background:var(--accent); }
-        .sum-dot.amber { background:var(--amber); }
+        .sum-dot.red   { background:var(--red); }
+        .sum-dot.amber { background:var(--pending); }
         .sum-item.green { color:var(--green); }
-        .sum-item.red   { color:#FF7A94; }
-        .sum-item.amber { color:var(--amber); }
+        .sum-item.red   { color:#FF6F8C; }
+        .sum-item.amber { color:var(--pending); }
         .sum-sep { color:var(--muted2); font-size:18px; line-height:1; }
 
         /* ── TOAST ───────────────────────────────────────── */
@@ -312,6 +323,7 @@
     <div class="header-tag">Studio Schedule</div>
     <div class="header-title"><em>Salsa</em></div>
     <div class="header-sub">זמינות מדריכים — ימי חמישי</div>
+    <a class="team-link" href="team.html">לוח השיבוץ שלי</a>
 
     <div class="month-nav">
         <button class="nav-btn" id="prevBtn" onclick="shiftMonth(-1)">&#8592;</button>
@@ -350,7 +362,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import {
         getFirestore, collection, query,
-        where, onSnapshot, doc, setDoc
+        where, onSnapshot, doc, getDoc, getDocs, setDoc
     } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
     const app = initializeApp({
@@ -363,7 +375,7 @@
     });
     const db = getFirestore(app);
 
-    const INSTRUCTORS = ['משה','רובי','גפן','נטע','ניב','עדי'];
+    let INSTRUCTORS = [];
     const COLORS = {
         'משה':'#FF6B6B','רובי':'#C084FC',
         'גפן':'#34D399', 'נטע':'#FBBF24',
@@ -391,8 +403,12 @@
     let view = { ...MAX_ALLOWED };
 
     // ── Helpers ──────────────────────────────────────────────
-    const fmtKey = d =>
-        d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    const fmtKey = d => {
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yy = String(d.getFullYear()).slice(-2);
+        return `${dd}/${mm}/${yy}`;
+    };
 
     function getThursdays(yr, mo) {
         const out=[], cur=new Date(yr,mo,1), last=new Date(yr,mo+1,0);
@@ -455,6 +471,11 @@
     // ── Pills ─────────────────────────────────────────────────
     function renderPills(){
         const wrap=document.getElementById('namePills');
+        wrap.innerHTML = '';
+        if (!INSTRUCTORS.length) {
+            wrap.innerHTML = '<div class="empty-msg">אין מדריכים פעילים כרגע. יש להוסיף מדריכים במסך הניהול.</div>';
+            return;
+        }
         INSTRUCTORS.forEach(name=>{
             const btn=document.createElement('button');
             btn.className='name-pill'; btn.textContent=name; btn.id=`pill-${name}`;
@@ -467,6 +488,22 @@
         document.querySelectorAll('.name-pill').forEach(p=>p.classList.remove('selected'));
         document.getElementById(`pill-${name}`).classList.add('selected');
         refreshAll(Object.keys(data));
+    }
+
+    async function loadInstructors() {
+        try {
+            const snap = await getDocs(query(collection(db, 'instructors'), where('active', '==', true)));
+            const active = snap.docs
+                .map(docSnap => docSnap.data())
+                .filter(item => item.name)
+                .sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'))
+                .map(item => item.name);
+
+            INSTRUCTORS = active;
+        } catch (err) {
+            console.error(err);
+            INSTRUCTORS = [];
+        }
     }
 
     // ── Cards ─────────────────────────────────────────────────
@@ -546,7 +583,7 @@
                 av.style.color='';
             } else {
                 av.classList.add('s-pending'); slot.classList.add('s-pending');
-                av.style.color = instructorColor;
+                av.style.color = '';
             }
 
             if(name===selectedName) av.classList.add('is-me');
@@ -602,13 +639,17 @@
         const docId = `${key.replace(/\//g, '-')}_${selectedName}`;
 
         try{
-            await setDoc(doc(db, 'availability', docId), {
+            const ref = doc(db, 'availability', docId);
+            const existing = await getDoc(ref);
+            const wasAssigned = existing.exists() && existing.data().isAssigned === true;
+
+            await setDoc(ref, {
                 name: selectedName,
                 date: key,
                 status: status,
-                isAssigned: false, // Preparation for the scheduling phase
+                isAssigned: wasAssigned,
                 timestamp: new Date()
-            });
+            }, { merge: true });
             
             toast(status==='available'
                 ?`✓  ${selectedName} פנוי/ה ב-${key}`
@@ -625,8 +666,10 @@
     };
 
     // ── Boot ─────────────────────────────────────────────────
-    renderPills();
-    renderView();
+    loadInstructors().finally(() => {
+        renderPills();
+        renderView();
+    });
 </script>
 </body>
 </html>

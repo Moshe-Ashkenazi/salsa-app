@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>סלסה - שיבוץ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,900&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0C0C10;
+            --surface: #13131A;
+            --surface2: #1C1C27;
+            --surface3: #242433;
+            --border: rgba(255,255,255,0.08);
+            --accent: #FF3D6B;
+            --gold: #F5C542;
+            --green: #00D67D;
+            --red: #FF3D6B;
+            --pending: #8D8D9B;
+            --text: #EEEAE4;
+            --muted: #777486;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100dvh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Sora', sans-serif;
+            padding: 18px;
+        }
+
+        button, input, textarea { font: inherit; }
+
+        .page { width: min(1240px, 100%); margin: 0 auto; }
+
+        .topbar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            color: var(--gold);
+            font-family: 'Playfair Display', serif;
+            font-size: 38px;
+            font-style: italic;
+            line-height: 1;
+        }
+
+        .sub { color: var(--muted); font-size: 13px; margin-top: 5px; }
+
+        .top-actions, .admin-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .link-btn, .btn {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            text-decoration: none;
+            border-radius: 9px;
+            padding: 9px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .btn.gold {
+            background: rgba(245,197,66,0.1);
+            border-color: rgba(245,197,66,0.35);
+            color: var(--gold);
+        }
+
+        .btn.green {
+            background: rgba(0,214,125,0.1);
+            border-color: rgba(0,214,125,0.28);
+            color: var(--green);
+        }
+
+        .btn.danger {
+            background: rgba(255,61,107,0.08);
+            border-color: rgba(255,61,107,0.3);
+            color: #FF7A94;
+        }
+
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .month-nav, .date-tabs {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .month-label {
+            min-width: 150px;
+            text-align: center;
+            color: var(--gold);
+            font-weight: 900;
+        }
+
+        .date-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            margin-bottom: 14px;
+        }
+
+        .date-tab {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 9px;
+            min-width: 92px;
+            padding: 9px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .date-tab.active {
+            color: var(--gold);
+            border-color: rgba(245,197,66,0.42);
+            background: rgba(245,197,66,0.1);
+        }
+
+        .date-tab .mini { color: var(--muted); display: block; font-size: 10px; margin-top: 2px; }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 315px minmax(0, 1fr);
+            gap: 14px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            padding: 14px;
+        }
+
+        .panel-title { color: var(--gold); font-weight: 900; font-size: 15px; }
+        .panel-desc { color: var(--muted); font-size: 11px; margin-top: 3px; line-height: 1.45; }
+        .panel-body { padding: 14px; }
+
+        .note-box { margin-bottom: 12px; }
+        .note-box textarea {
+            width: 100%;
+            min-height: 72px;
+            resize: vertical;
+            color: var(--text);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        .available-list, .slot-grid, .validation-list {
+            display: grid;
+            gap: 9px;
+        }
+
+        .person {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            padding: 10px;
+            cursor: grab;
+            user-select: none;
+            transition: 0.18s ease;
+        }
+
+        .person:active { cursor: grabbing; }
+        .person.used { opacity: 0.38; cursor: not-allowed; }
+        .person.not-certified { border-color: rgba(255,61,107,0.25); }
+
+        .person-name { font-size: 14px; font-weight: 900; }
+        .person-meta { color: var(--muted); font-size: 11px; margin-top: 3px; line-height: 1.45; }
+        .person-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+
+        .badge {
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            color: var(--muted);
+            background: rgba(255,255,255,0.03);
+            padding: 3px 7px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .badge.good { color: var(--green); border-color: rgba(0,214,125,0.3); }
+        .badge.gold { color: var(--gold); border-color: rgba(245,197,66,0.35); }
+        .badge.red { color: #FF7A94; border-color: rgba(255,61,107,0.3); }
+
+        .board-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .lesson-strip {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 7px;
+            margin-bottom: 13px;
+        }
+
+        .lesson-chip {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 9px 7px;
+            text-align: center;
+        }
+
+        .lesson-label { color: var(--muted); font-size: 10px; font-weight: 900; }
+        .lesson-code { color: var(--gold); font-size: 15px; font-weight: 900; margin-top: 2px; }
+
+        .slot-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .slot {
+            min-height: 126px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 12px;
+            transition: 0.16s ease;
+        }
+
+        .slot.drag-ok {
+            border-color: var(--green);
+            box-shadow: 0 0 0 2px rgba(0,214,125,0.18);
+        }
+
+        .slot.drag-bad {
+            border-color: var(--red);
+            box-shadow: 0 0 0 2px rgba(255,61,107,0.16);
+        }
+
+        .slot-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .slot-name { font-weight: 900; font-size: 14px; }
+        .slot-meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
+
+        .assigned-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            background: rgba(245,197,66,0.09);
+            border: 1px solid rgba(245,197,66,0.33);
+            border-radius: 11px;
+            padding: 10px;
+        }
+
+        .assigned-card.invalid {
+            background: rgba(255,61,107,0.08);
+            border-color: rgba(255,61,107,0.35);
+        }
+
+        .empty-slot {
+            color: var(--muted);
+            border: 1px dashed rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 16px 10px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .mini-btn {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            color: var(--text);
+            border-radius: 7px;
+            padding: 6px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .mini-btn.danger { color: #FF7A94; border-color: rgba(255,61,107,0.25); }
+
+        .validation {
+            margin-top: 12px;
+            display: none;
+        }
+
+        .validation.show { display: block; }
+
+        .validation-item {
+            border-radius: 9px;
+            padding: 10px;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .validation-item.error {
+            background: rgba(255,61,107,0.08);
+            border: 1px solid rgba(255,61,107,0.3);
+            color: #FF9CAF;
+        }
+
+        .validation-item.warn {
+            background: rgba(245,197,66,0.08);
+            border: 1px solid rgba(245,197,66,0.3);
+            color: var(--gold);
+        }
+
+        .swap-menu {
+            position: fixed;
+            display: none;
+            min-width: 220px;
+            max-width: calc(100vw - 24px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 18px 50px rgba(0,0,0,0.5);
+            z-index: 20;
+        }
+
+        .swap-menu.show { display: grid; gap: 6px; }
+
+        .swap-title {
+            color: var(--gold);
+            font-size: 11px;
+            font-weight: 900;
+            padding: 4px 6px;
+        }
+
+        .swap-option {
+            text-align: right;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 9px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 22px;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 13px;
+            padding: 12px 18px;
+            font-size: 13px;
+            font-weight: 900;
+            transition: 0.25s ease;
+            z-index: 30;
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 960px) {
+            .controls, .workspace { grid-template-columns: 1fr; }
+            .slot-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 620px) {
+            body { padding: 14px 11px 34px; }
+            h1 { font-size: 32px; }
+            .topbar, .board-head { flex-direction: column; }
+            .top-actions, .admin-actions { justify-content: flex-start; }
+            .lesson-strip { grid-template-columns: repeat(3, 1fr); }
+            .month-label { min-width: 112px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <div class="topbar">
+            <div>
+                <h1>Scheduling</h1>
+                <div class="sub">Drag & Drop חכם שמחבר זמינות, הסמכות וסילבוס</div>
+            </div>
+            <div class="top-actions">
+                <a class="link-btn" href="admin-start.html">בית מנהל</a>
+            </div>
+        </div>
+
+        <section class="controls">
+            <div class="month-nav">
+                <button class="btn" onclick="shiftMonth(-1)">&#8594; הקודם</button>
+                <div class="month-label" id="monthLabel">טוען...</div>
+                <button class="btn" onclick="shiftMonth(1)">הבא &#8592;</button>
+            </div>
+            <div class="admin-actions">
+                <button class="btn gold" onclick="autoFill()">Auto-Fill</button>
+                <button class="btn green" onclick="saveSchedule()">שמור שיבוץ</button>
+                <button class="btn danger" onclick="clearDraft()">נקה טיוטה</button>
+            </div>
+        </section>
+
+        <section class="date-tabs" id="dateTabs"></section>
+
+        <section class="workspace">
+            <aside class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="panel-title">רשימת פנויים</div>
+                        <div class="panel-desc">גרור מדריך למשבצת. מוסמכים לשיעור המסומן מקבלים עדיפות.</div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="available-list" id="availableList"></div>
+                </div>
+            </aside>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="panel-title" id="boardTitle">לוח שיבוץ</div>
+                        <div class="panel-desc" id="boardDesc">בחר תאריך</div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="note-box">
+                        <textarea id="managerNote" placeholder="הערת מנהל לצוות, למשל: מסיבת פורים, לבוא מחופשים"></textarea>
+                    </div>
+                    <div class="lesson-strip" id="lessonStrip"></div>
+                    <div class="slot-grid" id="slotGrid"></div>
+                    <div class="validation" id="validationBox">
+                        <div class="validation-list" id="validationList"></div>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <div class="swap-menu" id="swapMenu"></div>
+    <div class="toast" id="toast"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import {
+            getFirestore, collection, query, onSnapshot, doc, getDocs, writeBatch
+        } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        const app = initializeApp({
+            apiKey: "AIzaSyARhQHRZEaWN-0NyMbWQo416hDaE8uCUOM",
+            authDomain: "salsaproject-aadfe.firebaseapp.com",
+            projectId: "salsaproject-aadfe",
+            storageBucket: "salsaproject-aadfe.firebasestorage.app",
+            messagingSenderId: "357758186496",
+            appId: "1:357758186496:web:dcb34b95470a68a16654e5"
+        });
+
+        const db = getFirestore(app);
+        const LEVELS = [1, 2, 3, 4, 5];
+        const ROLES = {
+            lead: 'מדריך מוביל',
+            assistant: 'עוזר',
+            dj: 'DJ',
+            warmup: 'חימום'
+        };
+        const SLOT_DEFS = [
+            { id: 'level_5_lead', title: 'רמה 5 - מדריך', level: 5, role: 'מדריך מוביל', priority: 2 },
+            { id: 'level_5_assistant', title: 'רמה 5 - עוזר', level: 5, role: 'עוזר', priority: 1 },
+            { id: 'level_4_lead', title: 'רמה 4 - מדריך', level: 4, role: 'מדריך מוביל', priority: 2 },
+            { id: 'level_4_assistant', title: 'רמה 4 - עוזר', level: 4, role: 'עוזר', priority: 1 },
+            { id: 'level_3_lead', title: 'רמה 3 - מדריך', level: 3, role: 'מדריך מוביל', priority: 2 },
+            { id: 'level_3_assistant', title: 'רמה 3 - עוזר', level: 3, role: 'עוזר', priority: 1 },
+            { id: 'level_2_lead', title: 'רמה 2 - מדריך', level: 2, role: 'מדריך מוביל', priority: 2 },
+            { id: 'level_2_assistant', title: 'רמה 2 - עוזר', level: 2, role: 'עוזר', priority: 1 },
+            { id: 'level_1_lead', title: 'רמה 1 - מדריך', level: 1, role: 'מדריך מוביל', priority: 2 },
+            { id: 'level_1_assistant', title: 'רמה 1 - עוזר', level: 1, role: 'עוזר', priority: 1 },
+            { id: 'dj', title: 'DJ', level: null, role: 'DJ' },
+            { id: 'warmup', title: 'חימום', level: null, role: 'חימום' }
+        ];
+        const HEB_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+        const DEFAULT_SYLLABUS = {
+            1: { level: 1, cycleLength: 1, anchorDate: '07/05/26', anchorLesson: 1 },
+            2: { level: 2, cycleLength: 1, anchorDate: '07/05/26', anchorLesson: 1 },
+            3: { level: 3, cycleLength: 6, anchorDate: '07/05/26', anchorLesson: 1 },
+            4: { level: 4, cycleLength: 4, anchorDate: '07/05/26', anchorLesson: 1 },
+            5: { level: 5, cycleLength: 4, anchorDate: '07/05/26', anchorLesson: 1 }
+        };
+
+        let viewDate = getDefaultScheduleMonth();
+        let selectedDate = null;
+        let instructors = [];
+        let syllabusSettings = { ...DEFAULT_SYLLABUS };
+        let availabilityRows = [];
+        let savedAssignments = {};
+        let draft = {};
+        let notes = {};
+        let draggingName = null;
+        let unsubscribeAvailability = null;
+        let unsubscribeAssignments = null;
+        let unsubscribeNotes = null;
+
+        const fmtKey = d => {
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yy = String(d.getFullYear()).slice(-2);
+            return `${dd}/${mm}/${yy}`;
+        };
+        const idDate = key => key.replace(/\//g, '-');
+        const instructorByName = name => instructors.find(item => item.name === name);
+
+        function getDefaultScheduleMonth() {
+            const today = new Date();
+            const target = new Date(today);
+            if (today.getDate() >= 28) target.setMonth(target.getMonth() + 1);
+            target.setDate(1);
+            target.setHours(12, 0, 0, 0);
+            return target;
+        }
+
+        function toast(message) {
+            const el = document.getElementById('toast');
+            el.textContent = message;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2400);
+        }
+
+        function getThursdays(year, month) {
+            const out = [];
+            const cur = new Date(year, month, 1);
+            const last = new Date(year, month + 1, 0);
+            while (cur.getDay() !== 4) cur.setDate(cur.getDate() + 1);
+            while (cur <= last) {
+                out.push(new Date(cur));
+                cur.setDate(cur.getDate() + 7);
+            }
+            return out;
+        }
+
+        function parseKeyDate(key) {
+            const parts = String(key || '').split(/[/.]/).map(Number);
+            if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+            return new Date(2000 + parts[2], parts[1] - 1, parts[0]);
+        }
+
+        function lessonFor(level, date) {
+            const setting = syllabusSettings[level] || DEFAULT_SYLLABUS[level];
+            const cycleLength = Math.max(1, Number(setting.cycleLength || 1));
+            const anchorLesson = Math.min(Math.max(1, Number(setting.anchorLesson || 1)), cycleLength);
+            const anchorDate = parseKeyDate(setting.anchorDate) || new Date(date.getFullYear(), date.getMonth(), 1);
+            const offset = Math.round((date - anchorDate) / (7 * 24 * 60 * 60 * 1000));
+            const lesson = (((anchorLesson - 1 + offset) % cycleLength) + cycleLength) % cycleLength + 1;
+            return `${level}.${lesson}`;
+        }
+
+        function selectedDateObj() {
+            return getThursdays(viewDate.getFullYear(), viewDate.getMonth()).find(d => fmtKey(d) === selectedDate);
+        }
+
+        function isCertified(instructor, slot) {
+            if (!instructor || !slot) return false;
+            const roles = instructor.roles || [];
+            const levels = (instructor.levels || []).map(Number);
+            const roleOk = roles.includes(slot.role);
+            const levelOk = slot.level == null || levels.includes(Number(slot.level));
+            return roleOk && levelOk;
+        }
+
+        function getAvailability(name) {
+            return availabilityRows.find(row => row.date === selectedDate && row.name === name);
+        }
+
+        function availableInstructors() {
+            const used = new Set(Object.values(draft).filter(Boolean));
+            return instructors
+                .filter(item => item.active !== false)
+                .map(item => ({ ...item, availability: getAvailability(item.name), used: used.has(item.name) }))
+                .filter(item => item.availability?.status === 'available')
+                .sort((a, b) => Number(a.used) - Number(b.used) || monthlyLoad(a.name) - monthlyLoad(b.name) || a.name.localeCompare(b.name, 'he'));
+        }
+
+        function monthlyLoad(name) {
+            return Object.values(savedAssignments)
+                .flat()
+                .filter(item => item.instructorName === name && String(item.date || '').slice(3) === String(selectedDate || '').slice(3))
+                .length;
+        }
+
+        async function loadBaseData() {
+            const [instructorSnap, syllabusSnap] = await Promise.all([
+                getDocs(collection(db, 'instructors')),
+                getDocs(collection(db, 'syllabusSettings'))
+            ]);
+
+            instructors = instructorSnap.docs
+                .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
+                .filter(item => item.active !== false && item.name)
+                .sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
+
+            const nextSyllabus = { ...DEFAULT_SYLLABUS };
+            syllabusSnap.docs.forEach(docSnap => {
+                const row = docSnap.data();
+                if (row.level) nextSyllabus[row.level] = { ...nextSyllabus[row.level], ...row };
+            });
+            syllabusSettings = nextSyllabus;
+        }
+
+        function subscribeLiveData() {
+            unsubscribeAvailability?.();
+            unsubscribeAssignments?.();
+            unsubscribeNotes?.();
+
+            unsubscribeAvailability = onSnapshot(query(collection(db, 'availability')), snap => {
+                availabilityRows = snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+                render();
+            });
+
+            unsubscribeAssignments = onSnapshot(query(collection(db, 'scheduleAssignments')), snap => {
+                savedAssignments = {};
+                snap.docs.forEach(docSnap => {
+                    const row = { id: docSnap.id, ...docSnap.data() };
+                    if (!savedAssignments[row.date]) savedAssignments[row.date] = [];
+                    savedAssignments[row.date].push(row);
+                });
+                if (selectedDate) loadDraftFromSaved();
+                render();
+            });
+
+            unsubscribeNotes = onSnapshot(query(collection(db, 'scheduleNotes')), snap => {
+                notes = {};
+                snap.docs.forEach(docSnap => notes[docSnap.id] = docSnap.data().note || '');
+                renderNote();
+            });
+        }
+
+        function loadDraftFromSaved() {
+            draft = {};
+            (savedAssignments[selectedDate] || []).forEach(item => {
+                draft[item.slotId] = item.instructorName;
+            });
+        }
+
+        window.shiftMonth = dir => {
+            viewDate.setMonth(viewDate.getMonth() + dir);
+            const thursdays = getThursdays(viewDate.getFullYear(), viewDate.getMonth());
+            selectedDate = fmtKey(thursdays[0]);
+            loadDraftFromSaved();
+            render();
+        };
+
+        window.selectDate = key => {
+            selectedDate = key;
+            loadDraftFromSaved();
+            render();
+        };
+
+        window.startDrag = name => {
+            draggingName = name;
+            document.querySelectorAll('.slot').forEach(slotEl => {
+                const slot = SLOT_DEFS.find(item => item.id === slotEl.dataset.slot);
+                const instructor = instructorByName(name);
+                slotEl.classList.toggle('drag-ok', isCertified(instructor, slot));
+                slotEl.classList.toggle('drag-bad', !isCertified(instructor, slot));
+            });
+        };
+
+        window.endDrag = () => {
+            draggingName = null;
+            document.querySelectorAll('.slot').forEach(slot => slot.classList.remove('drag-ok', 'drag-bad'));
+        };
+
+        window.dropOnSlot = (slotId, event) => {
+            event.preventDefault();
+            const name = event.dataTransfer.getData('text/plain') || draggingName;
+            if (!name) return;
+            assignToSlot(name, slotId);
+            endDrag();
+        };
+
+        window.allowDrop = event => event.preventDefault();
+
+        function assignToSlot(name, slotId) {
+            const availability = getAvailability(name);
+            if (availability?.status !== 'available') {
+                toast('אי אפשר לשבץ מדריך שלא סימן פנוי');
+                return;
+            }
+
+            Object.keys(draft).forEach(id => {
+                if (draft[id] === name) draft[id] = null;
+            });
+            draft[slotId] = name;
+            render();
+        }
+
+        window.removeSlot = slotId => {
+            draft[slotId] = null;
+            render();
+        };
+
+        window.openSwap = (slotId, event) => {
+            event.preventDefault();
+            const slot = SLOT_DEFS.find(item => item.id === slotId);
+            const candidates = availableInstructors()
+                .filter(item => !item.used && isCertified(item, slot) && item.name !== draft[slotId]);
+            const menu = document.getElementById('swapMenu');
+            menu.style.left = `${Math.min(event.clientX, window.innerWidth - 235)}px`;
+            menu.style.top = `${Math.min(event.clientY, window.innerHeight - 260)}px`;
+            menu.innerHTML = `
+                <div class="swap-title">החלפה מהירה</div>
+                ${candidates.length ? candidates.map(item => `
+                    <button class="swap-option" onclick='swapTo(${JSON.stringify(slotId)}, ${JSON.stringify(item.name)})'>
+                        ${item.name} · עומס ${monthlyLoad(item.name)}
+                    </button>
+                `).join('') : '<div class="swap-title">אין חלופות מוסמכות פנויות</div>'}
+            `;
+            menu.classList.add('show');
+        };
+
+        window.swapTo = (slotId, name) => {
+            assignToSlot(name, slotId);
+            document.getElementById('swapMenu').classList.remove('show');
+        };
+
+        document.addEventListener('click', () => document.getElementById('swapMenu').classList.remove('show'));
+
+        window.clearDraft = () => {
+            draft = {};
+            render();
+        };
+
+        window.autoFill = () => {
+            draft = {};
+            const pool = availableInstructors();
+            const slots = [...SLOT_DEFS].sort((a, b) =>
+                (b.level || 0) - (a.level || 0) || (b.priority || 0) - (a.priority || 0)
+            );
+
+            slots.forEach(slot => {
+                const pick = pool
+                    .filter(item => !Object.values(draft).includes(item.name))
+                    .filter(item => isCertified(item, slot))
+                    .sort((a, b) => monthlyLoad(a.name) - monthlyLoad(b.name) || a.name.localeCompare(b.name, 'he'))[0];
+                if (pick) draft[slot.id] = pick.name;
+            });
+
+            render();
+            toast('נוצרה טיוטת שיבוץ');
+        };
+
+        function validateDraft() {
+            const errors = [];
+            const warnings = [];
+            const used = new Map();
+
+            SLOT_DEFS.forEach(slot => {
+                const name = draft[slot.id];
+                if (!name) return;
+
+                const instructor = instructorByName(name);
+                const availability = getAvailability(name);
+
+                if (availability?.status !== 'available') {
+                    errors.push(`${name} שובץ ל-${slot.title} אבל לא סימן פנוי.`);
+                }
+
+                if (!isCertified(instructor, slot)) {
+                    errors.push(`${name} לא מוסמך/ת ל-${slot.title} (${slot.role}${slot.level ? `, רמה ${slot.level}` : ''}).`);
+                }
+
+                if (used.has(name)) {
+                    errors.push(`${name} שובץ/ה פעמיים באותו ערב: ${used.get(name)} וגם ${slot.title}.`);
+                }
+                used.set(name, slot.title);
+            });
+
+            if (!Object.values(draft).filter(Boolean).length) {
+                warnings.push('אין אף שיבוץ בטיוטה.');
+            }
+
+            return { errors, warnings };
+        }
+
+        function renderValidation(errors = [], warnings = []) {
+            const box = document.getElementById('validationBox');
+            const list = document.getElementById('validationList');
+            const items = [
+                ...errors.map(text => ({ type: 'error', text })),
+                ...warnings.map(text => ({ type: 'warn', text }))
+            ];
+            box.classList.toggle('show', items.length > 0);
+            list.innerHTML = items.map(item => `<div class="validation-item ${item.type}">${item.text}</div>`).join('');
+        }
+
+        window.saveSchedule = async () => {
+            const { errors, warnings } = validateDraft();
+            renderValidation(errors, warnings);
+            if (errors.length) {
+                toast('יש שגיאות שצריך לתקן לפני שמירה');
+                return;
+            }
+
+            const dateObj = selectedDateObj();
+            const batch = writeBatch(db);
+            const existing = savedAssignments[selectedDate] || [];
+            existing.forEach(item => batch.delete(doc(db, 'scheduleAssignments', item.id)));
+
+            SLOT_DEFS.forEach(slot => {
+                const name = draft[slot.id];
+                if (!name) return;
+                const id = `${idDate(selectedDate)}_${slot.id}`;
+                batch.set(doc(db, 'scheduleAssignments', id), {
+                    date: selectedDate,
+                    slotId: slot.id,
+                    slotTitle: slot.title,
+                    role: slot.role,
+                    level: slot.level,
+                    lessonCode: slot.level ? lessonFor(slot.level, dateObj) : '',
+                    instructorName: name,
+                    updatedAt: new Date()
+                });
+            });
+
+            const assignedNames = new Set(Object.values(draft).filter(Boolean));
+            availabilityRows
+                .filter(row => row.date === selectedDate)
+                .forEach(row => {
+                    batch.set(doc(db, 'availability', row.id), {
+                        isAssigned: assignedNames.has(row.name)
+                    }, { merge: true });
+                });
+
+            const note = document.getElementById('managerNote').value.trim();
+            batch.set(doc(db, 'scheduleNotes', idDate(selectedDate)), {
+                date: selectedDate,
+                note,
+                updatedAt: new Date()
+            }, { merge: true });
+
+            await batch.commit();
+            toast(warnings.length ? 'השיבוץ נשמר עם אזהרות' : 'השיבוץ נשמר');
+        };
+
+        function render() {
+            const thursdays = getThursdays(viewDate.getFullYear(), viewDate.getMonth());
+            if (!selectedDate && thursdays.length) {
+                selectedDate = fmtKey(thursdays[0]);
+                loadDraftFromSaved();
+            }
+
+            document.getElementById('monthLabel').textContent = `${HEB_MONTHS[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
+            renderTabs(thursdays);
+            renderBoard();
+            renderAvailableList();
+            renderValidation();
+            renderNote();
+        }
+
+        function renderTabs(thursdays) {
+            document.getElementById('dateTabs').innerHTML = thursdays.map(date => {
+                const key = fmtKey(date);
+                const count = (savedAssignments[key] || []).length;
+                return `
+                    <button class="date-tab ${key === selectedDate ? 'active' : ''}" onclick='selectDate(${JSON.stringify(key)})'>
+                        ${date.getDate()} ${HEB_MONTHS[date.getMonth()]}
+                        <span class="mini">${count} שיבוצים</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderNote() {
+            const input = document.getElementById('managerNote');
+            if (document.activeElement !== input) input.value = notes[idDate(selectedDate)] || '';
+        }
+
+        function renderBoard() {
+            const dateObj = selectedDateObj();
+            if (!dateObj) return;
+
+            document.getElementById('boardTitle').textContent = `שיבוץ ${selectedDate}`;
+            document.getElementById('boardDesc').textContent = 'קליק ימני על משובץ פותח החלפה מהירה';
+            document.getElementById('lessonStrip').innerHTML = LEVELS.map(level => `
+                <div class="lesson-chip">
+                    <div class="lesson-label">רמה ${level}</div>
+                    <div class="lesson-code">${lessonFor(level, dateObj)}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('slotGrid').innerHTML = SLOT_DEFS.map(slot => renderSlot(slot, dateObj)).join('');
+        }
+
+        function renderSlot(slot, dateObj) {
+            const name = draft[slot.id];
+            const instructor = instructorByName(name);
+            const certified = isCertified(instructor, slot);
+            const lesson = slot.level ? lessonFor(slot.level, dateObj) : slot.role;
+
+            return `
+                <div class="slot" data-slot="${slot.id}" ondragover="allowDrop(event)" ondrop='dropOnSlot(${JSON.stringify(slot.id)}, event)'>
+                    <div class="slot-top">
+                        <div>
+                            <div class="slot-name">${slot.title}</div>
+                            <div class="slot-meta">${slot.role}${slot.level ? ` · שיעור ${lesson}` : ''}</div>
+                        </div>
+                    </div>
+                    ${name ? `
+                        <div class="assigned-card ${certified ? '' : 'invalid'}" oncontextmenu='openSwap(${JSON.stringify(slot.id)}, event)'>
+                            <div>
+                                <div class="person-name">${name}</div>
+                                <div class="person-meta">${certified ? 'מוסמך/ת למשבצת' : 'לא מוסמך/ת למשבצת'}</div>
+                            </div>
+                            <button class="mini-btn danger" onclick='removeSlot(${JSON.stringify(slot.id)})'>הסר</button>
+                        </div>
+                    ` : '<div class="empty-slot">גרור לכאן מדריך פנוי</div>'}
+                </div>
+            `;
+        }
+
+        function renderAvailableList() {
+            const dateObj = selectedDateObj();
+            const mainLevel = dateObj ? LEVELS.map(level => ({ level, lesson: lessonFor(level, dateObj) })) : [];
+            const selectedSlots = new Set(Object.values(draft).filter(Boolean));
+            const items = availableInstructors();
+
+            if (!items.length) {
+                document.getElementById('availableList').innerHTML = '<div class="empty-slot">אין מדריכים פנויים לתאריך הזה</div>';
+                return;
+            }
+
+            document.getElementById('availableList').innerHTML = items.map(item => {
+                const certifiedLevels = mainLevel.filter(levelInfo => (item.levels || []).map(Number).includes(levelInfo.level));
+                const used = selectedSlots.has(item.name);
+                return `
+                    <div class="person ${used ? 'used' : ''}"
+                         draggable="${used ? 'false' : 'true'}"
+                         ondragstart='event.dataTransfer.setData("text/plain", ${JSON.stringify(item.name)}); startDrag(${JSON.stringify(item.name)})'
+                         ondragend="endDrag()">
+                        <div class="person-name">${item.name}</div>
+                        <div class="person-meta">עומס חודשי: ${monthlyLoad(item.name)} · ${used ? 'כבר שובץ הערב' : 'זמין לגרירה'}</div>
+                        <div class="person-badges">
+                            ${(item.roles || []).map(role => `<span class="badge gold">${role}</span>`).join('')}
+                            ${certifiedLevels.map(levelInfo => `<span class="badge good">${levelInfo.lesson}</span>`).join('')}
+                            ${!certifiedLevels.length ? '<span class="badge red">אין הסמכת רמה</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        loadBaseData().then(subscribeLiveData).catch(err => {
+            console.error(err);
+            toast('שגיאה בטעינת נתוני בסיס');
+            subscribeLiveData();
+        });
+    </script>
+</body>
+</html>
