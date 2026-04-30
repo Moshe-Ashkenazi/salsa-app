@@ -254,12 +254,15 @@
                     <div class="panel-title">ניהול מדריכים</div>
                     <div class="panel-desc">המדריכים הפעילים מכאן מופיעים במסך הזמינות והשיבוץ.</div>
                 </div>
-                <div class="panel-body">
+            <div class="panel-body">
                     <div class="form-grid">
                         <label>
                             שם מדריך
                             <input id="instructorName" placeholder="למשל: משה">
                         </label>
+                        <div class="panel-desc" id="editHint" style="display:none;">
+                            בעריכת מדריך קיים אי אפשר לשנות שם. כדי לשנות שם, מחק והוסף מחדש.
+                        </div>
 
                         <label>
                             סטטוס צוות
@@ -280,6 +283,7 @@
                         </div>
 
                         <button class="btn" onclick="saveInstructor()">שמור מדריך</button>
+                        <button class="btn secondary" type="button" onclick="cancelInstructorEdit()">ביטול עריכה</button>
                     </div>
 
                     <div class="instructor-list" id="instructorList"></div>
@@ -336,6 +340,7 @@
         const LEVELS = [1, 2, 3, 4, 5];
         let instructors = [];
         let editingInstructorId = null;
+        let editingInstructorName = null;
 
         function toast(message) {
             const el = document.getElementById('toast');
@@ -397,10 +402,24 @@
             const item = instructors.find(row => row.id === id);
             if (!item) return;
             editingInstructorId = id;
+            editingInstructorName = item.name || '';
             document.getElementById('instructorName').value = item.name || '';
+            document.getElementById('instructorName').disabled = true;
+            document.getElementById('editHint').style.display = 'block';
             document.getElementById('instructorActive').value = item.active === false ? 'false' : 'true';
             document.querySelectorAll('#roleChecks input').forEach(input => input.checked = (item.roles || []).includes(input.value));
             document.querySelectorAll('#levelChecks input').forEach(input => input.checked = (item.levels || []).map(String).includes(input.value));
+        };
+
+        window.cancelInstructorEdit = () => {
+            editingInstructorId = null;
+            editingInstructorName = null;
+            document.getElementById('instructorName').value = '';
+            document.getElementById('instructorName').disabled = false;
+            document.getElementById('editHint').style.display = 'none';
+            document.getElementById('instructorActive').value = 'true';
+            document.querySelectorAll('#roleChecks input, #levelChecks input').forEach(input => input.checked = false);
+            toast('עריכה בוטלה');
         };
 
         window.toggleInstructor = async (id, isActive) => {
@@ -455,6 +474,21 @@
                 return;
             }
 
+            if (editingInstructorId && name !== editingInstructorName) {
+                toast('אי אפשר לשנות שם מדריך קיים. מחק והוסף מחדש.');
+                return;
+            }
+
+            const duplicate = instructors.some(item =>
+                item.id !== editingInstructorId &&
+                String(item.name || '').trim() === name
+            );
+
+            if (duplicate) {
+                toast('כבר קיים מדריך בשם הזה');
+                return;
+            }
+
             const data = {
                 name,
                 roles: selectedValues('roleChecks'),
@@ -469,7 +503,10 @@
                 await addDoc(collection(db, 'instructors'), data);
             }
             editingInstructorId = null;
+            editingInstructorName = null;
             document.getElementById('instructorName').value = '';
+            document.getElementById('instructorName').disabled = false;
+            document.getElementById('editHint').style.display = 'none';
             document.getElementById('instructorActive').value = 'true';
             document.querySelectorAll('#roleChecks input, #levelChecks input').forEach(input => input.checked = false);
             toast('המדריך נשמר');
