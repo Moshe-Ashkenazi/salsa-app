@@ -14,6 +14,7 @@
         body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;padding:18px}
         .page{width:min(980px,100%);margin:0 auto}
         .topbar{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:18px}
+        .top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
         h1{color:var(--gold);font-family:'Playfair Display',serif;font-size:38px;font-style:italic;line-height:1}
         .sub{color:var(--muted);font-size:13px;margin-top:5px}
         .link{color:var(--text);text-decoration:none;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800}
@@ -24,6 +25,8 @@
         .date-tabs{display:flex;gap:8px;overflow:auto;padding:10px;margin-bottom:12px}
         .date-tab{min-width:94px}
         .date-tab.active{color:var(--gold);border-color:rgba(245,197,66,0.4);background:rgba(245,197,66,0.09)}
+        .copy-whatsapp{border-color:rgba(0,214,125,0.28);background:rgba(0,214,125,0.1);color:var(--green)}
+        .copy-whatsapp:disabled{cursor:not-allowed;opacity:.45;color:var(--muted);border-color:var(--border);background:var(--surface2)}
         .note{padding:14px;margin-bottom:12px;color:var(--gold);font-size:13px;font-weight:800;line-height:1.55}
         .note.empty{color:var(--muted)}
         .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -37,6 +40,8 @@
         .teacher{font-size:17px;font-weight:900}
         .teacher.empty{color:var(--muted);font-size:13px}
         .pill{display:inline-block;margin-top:4px;color:var(--green);border:1px solid rgba(0,214,125,0.25);background:rgba(0,214,125,0.08);border-radius:100px;padding:4px 8px;font-size:10px;font-weight:900}
+        .toast{position:fixed;left:50%;bottom:18px;z-index:10;transform:translateX(-50%) translateY(22px);opacity:0;pointer-events:none;background:var(--surface);border:1px solid rgba(0,214,125,0.35);border-radius:12px;padding:12px 16px;color:var(--text);font-size:13px;font-weight:900;box-shadow:0 18px 40px rgba(0,0,0,.32);transition:.22s ease}
+        .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
         @media(max-width:720px){body{padding:14px 11px}.topbar{flex-direction:column}.grid{grid-template-columns:1fr}h1{font-size:32px}}
     </style>
 </head>
@@ -47,7 +52,10 @@
                 <h1>Team Board</h1>
                 <div class="sub">לוח שיבוץ נקי לצוות</div>
             </div>
-            <a class="link" href="index.html">מילוי זמינות</a>
+            <div class="top-actions">
+                <button class="copy-whatsapp" id="copyWhatsAppBtn" onclick="copySelectedDateToWhatsApp()" disabled>העתק לוואטסאפ</button>
+                <a class="link" href="index.html">מילוי זמינות</a>
+            </div>
         </div>
 
         <div class="month-nav">
@@ -59,6 +67,7 @@
         <div class="note empty" id="managerNote">אין הערת מנהל לתאריך הזה</div>
         <section class="grid" id="teamGrid"></section>
     </main>
+    <div class="toast" id="toast"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
@@ -111,6 +120,7 @@
         };
 
         window.selectDate = key => { selectedDate = key; render(); };
+        window.copySelectedDateToWhatsApp = copySelectedDateToWhatsApp;
 
         function render() {
             const days = getThursdays(viewDate.getFullYear(), viewDate.getMonth());
@@ -127,6 +137,7 @@
             noteEl.classList.toggle('empty', !note);
 
             const rows = assignments[selectedDate] || [];
+            document.getElementById('copyWhatsAppBtn').disabled = !rows.length;
             const selectedDateObj = parseKeyDate(selectedDate);
             const levelCards = LEVELS.map(level => {
                 const lead = rows.find(row => row.slotId === `level_${level}_lead`);
@@ -139,6 +150,59 @@
                 .join('');
 
             document.getElementById('teamGrid').innerHTML = levelCards + extras;
+        }
+
+        function getAssignedName(rows, slotId) {
+            return (rows.find(row => row.slotId === slotId)?.instructorName || '').trim();
+        }
+
+        function buildWhatsAppText() {
+            const rows = assignments[selectedDate] || [];
+            const selectedDateObj = parseKeyDate(selectedDate);
+            const lines = [`*שיבוצי ההדרכה ליום חמישי ${selectedDate}* 💃🕺`, ''];
+
+            [1, 2, 3, 4, 5].forEach(level => {
+                const leadName = getAssignedName(rows, `level_${level}_lead`);
+                const assistantName = getAssignedName(rows, `level_${level}_assistant`);
+                if (!leadName && !assistantName) return;
+
+                const lessonCode = selectedDateObj ? lessonFor(level, selectedDateObj) : `רמה ${level}`;
+                const instructorText = leadName || 'חסר מדריך';
+                const assistantText = assistantName ? ` (עוזר/ת: ${assistantName})` : '';
+                lines.push(`🔹 *רמה ${level} (שיעור ${lessonCode}):* ${instructorText}${assistantText}`);
+            });
+
+            const djName = getAssignedName(rows, 'dj');
+            const warmupName = getAssignedName(rows, 'warmup');
+            if (djName || warmupName) {
+                lines.push('');
+                if (djName) lines.push(`🎧 *DJ:* ${djName}`);
+                if (warmupName) lines.push(`🤸 *חימום:* ${warmupName}`);
+            }
+
+            const note = (notes[idDate(selectedDate)] || '').trim();
+            if (note) {
+                lines.push('', `📌 *שימו לב:* ${note}`);
+            }
+
+            lines.push('מחכים לראות את כולם! ✨');
+            return lines.join('\n');
+        }
+
+        async function copySelectedDateToWhatsApp() {
+            const rows = assignments[selectedDate] || [];
+            if (!rows.length) return;
+
+            await navigator.clipboard.writeText(buildWhatsAppText());
+            toast('השיבוץ הועתק בהצלחה!');
+        }
+
+        function toast(message) {
+            const el = document.getElementById('toast');
+            el.textContent = message;
+            el.classList.add('show');
+            clearTimeout(toast.timer);
+            toast.timer = setTimeout(() => el.classList.remove('show'), 2600);
         }
 
         function renderLevelCard(level, lead, assistant, selectedDateObj) {
