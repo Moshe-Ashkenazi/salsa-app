@@ -805,15 +805,16 @@
                 const leadSlotId = leadSlotForAssistant(slot);
                 if (leadSlotId && !draft[leadSlotId]) return;
 
-                const remainingSlots = unfilledSlotsAfter(slot);
+                const highestCertifiedLevel = instructor => Math.max(0, ...(instructor.levels || []).map(Number).filter(Number.isFinite));
                 const pick = instructors
                     .filter(instructor => canFillSlot(instructor, slot))
                     .sort((a, b) => {
+                        const capabilityMatch = highestCertifiedLevel(a) - highestCertifiedLevel(b);
                         const supportLoadBalance = isSupportSlotId(slot.id)
                             ? Number(nightlyLoad(a.name) > 0) - Number(nightlyLoad(b.name) > 0)
                             : 0;
-                        return supportLoadBalance
-                            || futureFlexibility(a, slot, remainingSlots) - futureFlexibility(b, slot, remainingSlots)
+                        return capabilityMatch
+                            || supportLoadBalance
                             || monthlyLoad(a.name) - monthlyLoad(b.name)
                             || a.name.localeCompare(b.name, 'he');
                     })[0];
