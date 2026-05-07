@@ -18,6 +18,7 @@
         h1{color:var(--gold);font-family:'Playfair Display',serif;font-size:38px;font-style:italic;line-height:1}
         .sub{color:var(--muted);font-size:13px;margin-top:5px}
         .link{color:var(--text);text-decoration:none;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800}
+        .link:disabled{cursor:not-allowed;opacity:.45}
         .month-nav,.date-tabs,.note,.grid-card{background:var(--surface);border:1px solid var(--border);border-radius:13px}
         .month-nav{display:flex;justify-content:center;align-items:center;gap:10px;padding:10px;margin-bottom:10px}
         button{font:inherit;cursor:pointer;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:12px;font-weight:800}
@@ -54,6 +55,7 @@
             </div>
             <div class="top-actions">
                 <button class="copy-whatsapp" id="copyWhatsAppBtn" onclick="copySelectedDateToWhatsApp()" disabled>העתק לוואטסאפ</button>
+                <button class="link" id="remindBtn" onclick="copyAvailabilityReminder()">תזכורת זמינות</button>
                 <a class="link" href="index.html">מילוי זמינות</a>
             </div>
         </div>
@@ -95,6 +97,8 @@
         let viewDate = getDefaultThursday();
         let selectedDate = fmtKey(viewDate);
         let assignments = {};
+        let instructors = [];
+        let availabilityRows = [];
         let notes = {};
         let syllabusSettings = { ...DEFAULT_SYLLABUS };
 
@@ -121,6 +125,7 @@
 
         window.selectDate = key => { selectedDate = key; render(); };
         window.copySelectedDateToWhatsApp = copySelectedDateToWhatsApp;
+        window.copyAvailabilityReminder = copyAvailabilityReminder;
 
         function render() {
             const days = getThursdays(viewDate.getFullYear(), viewDate.getMonth());
@@ -138,6 +143,7 @@
 
             const rows = assignments[selectedDate] || [];
             document.getElementById('copyWhatsAppBtn').disabled = !rows.length;
+            document.getElementById('remindBtn').disabled = isPastSelectedDate();
             const selectedDateObj = parseKeyDate(selectedDate);
             const levelCards = LEVELS.map(level => {
                 const lead = rows.find(row => row.slotId === `level_${level}_lead`);
@@ -150,6 +156,58 @@
                 .join('');
 
             document.getElementById('teamGrid').innerHTML = levelCards + extras;
+        }
+
+        function isPastSelectedDate() {
+            const selectedDateObj = parseKeyDate(selectedDate);
+            if (!selectedDateObj) return true;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            selectedDateObj.setHours(0, 0, 0, 0);
+            return selectedDateObj < today;
+        }
+
+        function missingAvailabilityNames() {
+            const validStatuses = new Set(['available', 'unavailable']);
+            return instructors
+                .filter(instructor => instructor.active !== false && instructor.name)
+                .filter(instructor => {
+                    const hasValidRecord = availabilityRows.some(item =>
+                        item.date === selectedDate &&
+                        item.name === instructor.name &&
+                        validStatuses.has(item.status)
+                    );
+                    return !hasValidRecord;
+                })
+                .map(instructor => instructor.name)
+                .sort((a, b) => a.localeCompare(b, 'he'));
+        }
+
+        function buildAvailabilityReminderText(names) {
+            const dynamicUrl = `${window.location.origin}/index.html`;
+            return [
+                '*תזכורת זמינות!* ⏳💃',
+                `חברים, מי שעוד לא מילא זמינות ליום חמישי ה-${selectedDate}, נא להיכנס ללינק ולהשלים:`,
+                dynamicUrl,
+                '',
+                'מחכים לתשובה מ:',
+                names.map(name => `@${name}`).join(', '),
+                '',
+                'תודה! ✨'
+            ].join('\n');
+        }
+
+        async function copyAvailabilityReminder() {
+            if (isPastSelectedDate()) return;
+
+            const names = missingAvailabilityNames();
+            if (!names.length) {
+                toast('כולם מילאו זמינות! איזה צוות אלופה');
+                return;
+            }
+
+            await navigator.clipboard.writeText(buildAvailabilityReminderText(names));
+            toast('התזכורת הועתקה ללוח!');
         }
 
         function getAssignedName(rows, slotId) {
@@ -254,6 +312,19 @@
                 if (!assignments[row.date]) assignments[row.date] = [];
                 assignments[row.date].push(row);
             });
+            render();
+        });
+
+        onSnapshot(query(collection(db, 'instructors')), snap => {
+            instructors = snap.docs
+                .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
+                .filter(item => item.active !== false && item.name)
+                .sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
+            render();
+        });
+
+        onSnapshot(query(collection(db, 'availability')), snap => {
+            availabilityRows = snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
             render();
         });
 

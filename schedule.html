@@ -590,10 +590,6 @@
             return SLOT_DEFS.some(slot => isTeachingSlotId(slot.id) && draft[slot.id] === name);
         }
 
-        function canAutoAssignToSlot(name, slotId) {
-            return isSupportSlotId(slotId) || !hasTeachingAssignment(name);
-        }
-
         function getAvailability(name) {
             return availabilityRows.find(row => row.date === selectedDate && row.name === name);
         }
@@ -765,32 +761,69 @@
         };
 
         window.autoFill = () => {
-            draft = {};
-            const pool = availableInstructors();
-            const slots = [...SLOT_DEFS].sort((a, b) =>
-                (b.level || 0) - (a.level || 0) || (b.priority || 0) - (a.priority || 0)
-            );
+            const phaseSlotIds = [
+                'level_1_lead', 'level_2_lead',
+                'level_3_lead', 'level_4_lead', 'level_5_lead',
+                'level_1_assistant', 'level_2_assistant',
+                'level_3_assistant', 'level_4_assistant', 'level_5_assistant',
+                'dj', 'warmup'
+            ];
+            const slots = phaseSlotIds
+                .map(id => SLOT_DEFS.find(slot => slot.id === id))
+                .filter(Boolean);
+
+            const nightlyLoad = name => Object.values(draft).filter(item => item === name).length;
+            const leadSlotForAssistant = slot => {
+                const levelMatch = String(slot.id).match(/^level_(\d+)_assistant$/);
+                return levelMatch ? `level_${levelMatch[1]}_lead` : null;
+            };
+            const unfilledSlotsAfter = slot => slots.slice(slots.indexOf(slot) + 1).filter(item => !draft[item.id]);
+            const canFillSlot = (instructor, slot) => {
+                if (instructor.active === false) return false;
+                if (getAvailability(instructor.name)?.status !== 'available') return false;
+                if (!isCertified(instructor, slot)) return false;
+                if (isTeachingSlotId(slot.id) && hasTeachingAssignment(instructor.name)) return false;
+                return true;
+            };
+            const futureFlexibility = (instructor, currentSlot, remainingSlots) => remainingSlots
+                .filter(slot => {
+                    const wouldHaveTeaching = hasTeachingAssignment(instructor.name) || isTeachingSlotId(currentSlot.id);
+                    if (isTeachingSlotId(slot.id) && wouldHaveTeaching) return false;
+
+                    const leadSlotId = leadSlotForAssistant(slot);
+                    if (leadSlotId && !draft[leadSlotId] && currentSlot.id !== leadSlotId) return false;
+
+                    if (instructor.active === false) return false;
+                    if (getAvailability(instructor.name)?.status !== 'available') return false;
+                    return isCertified(instructor, slot);
+                })
+                .length;
 
             slots.forEach(slot => {
-                const remainingSlots = slots.filter(item => !draft[item.id]);
-                const pick = pool
-                    .filter(item => canAutoAssignToSlot(item.name, slot.id))
-                    .filter(item => isCertified(item, slot))
-                    .sort((a, b) =>
-                        candidateFlexibility(a, remainingSlots) - candidateFlexibility(b, remainingSlots)
-                        || monthlyLoad(a.name) - monthlyLoad(b.name)
-                        || a.name.localeCompare(b.name, 'he')
-                    )[0];
+                if (draft[slot.id]) return;
+
+                const leadSlotId = leadSlotForAssistant(slot);
+                if (leadSlotId && !draft[leadSlotId]) return;
+
+                const remainingSlots = unfilledSlotsAfter(slot);
+                const pick = instructors
+                    .filter(instructor => canFillSlot(instructor, slot))
+                    .sort((a, b) => {
+                        const supportLoadBalance = isSupportSlotId(slot.id)
+                            ? Number(nightlyLoad(a.name) > 0) - Number(nightlyLoad(b.name) > 0)
+                            : 0;
+                        return supportLoadBalance
+                            || futureFlexibility(a, slot, remainingSlots) - futureFlexibility(b, slot, remainingSlots)
+                            || monthlyLoad(a.name) - monthlyLoad(b.name)
+                            || a.name.localeCompare(b.name, 'he');
+                    })[0];
+
                 if (pick) draft[slot.id] = pick.name;
             });
 
             render();
-            toast('נוצרה טיוטת שיבוץ');
+            toast('השיבוץ האוטומטי הושלם');
         };
-
-        function candidateFlexibility(instructor, slots) {
-            return slots.filter(slot => isCertified(instructor, slot)).length;
-        }
 
         function validateDraft() {
             const errors = [];
