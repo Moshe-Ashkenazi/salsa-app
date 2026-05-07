@@ -204,7 +204,6 @@
         }
 
         .person:active { cursor: grabbing; }
-        .person.used { opacity: 0.38; cursor: not-allowed; }
         .person.not-certified { border-color: rgba(255,61,107,0.25); }
 
         .person-name { font-size: 14px; font-weight: 900; }
@@ -573,6 +572,28 @@
             return roleOk && levelOk;
         }
 
+        function isTeachingSlotId(slotId) {
+            return String(slotId || '').includes('level_');
+        }
+
+        function isSupportSlotId(slotId) {
+            return slotId === 'dj' || slotId === 'warmup';
+        }
+
+        function currentAssignmentsFor(name) {
+            return SLOT_DEFS
+                .filter(slot => draft[slot.id] === name)
+                .map(slot => slot.title);
+        }
+
+        function hasTeachingAssignment(name) {
+            return SLOT_DEFS.some(slot => isTeachingSlotId(slot.id) && draft[slot.id] === name);
+        }
+
+        function canAutoAssignToSlot(name, slotId) {
+            return isSupportSlotId(slotId) || !hasTeachingAssignment(name);
+        }
+
         function getAvailability(name) {
             return availabilityRows.find(row => row.date === selectedDate && row.name === name);
         }
@@ -698,9 +719,11 @@
                 return;
             }
 
-            Object.keys(draft).forEach(id => {
-                if (draft[id] === name) draft[id] = null;
-            });
+            if (isTeachingSlotId(slotId)) {
+                Object.keys(draft).forEach(id => {
+                    if (isTeachingSlotId(id) && draft[id] === name) draft[id] = null;
+                });
+            }
             draft[slotId] = name;
             render();
         }
@@ -714,7 +737,7 @@
             event.preventDefault();
             const slot = SLOT_DEFS.find(item => item.id === slotId);
             const candidates = availableInstructors()
-                .filter(item => !item.used && isCertified(item, slot) && item.name !== draft[slotId]);
+                .filter(item => isCertified(item, slot) && item.name !== draft[slotId]);
             const menu = document.getElementById('swapMenu');
             menu.style.left = `${Math.min(event.clientX, window.innerWidth - 235)}px`;
             menu.style.top = `${Math.min(event.clientY, window.innerHeight - 260)}px`;
@@ -751,7 +774,7 @@
             slots.forEach(slot => {
                 const remainingSlots = slots.filter(item => !draft[item.id]);
                 const pick = pool
-                    .filter(item => !Object.values(draft).includes(item.name))
+                    .filter(item => canAutoAssignToSlot(item.name, slot.id))
                     .filter(item => isCertified(item, slot))
                     .sort((a, b) =>
                         candidateFlexibility(a, remainingSlots) - candidateFlexibility(b, remainingSlots)
@@ -772,7 +795,7 @@
         function validateDraft() {
             const errors = [];
             const warnings = [];
-            const used = new Map();
+            const usedTeaching = new Map();
 
             SLOT_DEFS.forEach(slot => {
                 const name = draft[slot.id];
@@ -793,10 +816,12 @@
                     errors.push(`${name} לא מוסמך/ת ל-${slot.title} (${slot.role}${slot.level ? `, רמה ${slot.level}` : ''}).`);
                 }
 
-                if (used.has(name)) {
-                    errors.push(`${name} שובץ/ה פעמיים באותו ערב: ${used.get(name)} וגם ${slot.title}.`);
+                if (isTeachingSlotId(slot.id) && usedTeaching.has(name)) {
+                    errors.push(`${name} שובץ/ה פעמיים באותו ערב: ${usedTeaching.get(name)} וגם ${slot.title}.`);
                 }
-                used.set(name, slot.title);
+                if (isTeachingSlotId(slot.id)) {
+                    usedTeaching.set(name, slot.title);
+                }
             });
 
             if (!Object.values(draft).filter(Boolean).length) {
@@ -958,7 +983,6 @@
         function renderAvailableList() {
             const dateObj = selectedDateObj();
             const mainLevel = dateObj ? LEVELS.map(level => ({ level, lesson: lessonFor(level, dateObj) })) : [];
-            const selectedSlots = new Set(Object.values(draft).filter(Boolean));
             const items = availableInstructors();
 
             if (!items.length) {
@@ -968,14 +992,15 @@
 
             document.getElementById('availableList').innerHTML = items.map(item => {
                 const certifiedLevels = mainLevel.filter(levelInfo => (item.levels || []).map(Number).includes(levelInfo.level));
-                const used = selectedSlots.has(item.name);
+                const assignments = currentAssignmentsFor(item.name);
+                const assignmentText = assignments.length ? `שובץ ל: ${assignments.join(', ')}` : 'זמין לגרירה';
                 return `
-                    <div class="person ${used ? 'used' : ''}"
-                         draggable="${used ? 'false' : 'true'}"
+                    <div class="person"
+                         draggable="true"
                          ondragstart='event.dataTransfer.setData("text/plain", ${JSON.stringify(item.name)}); startDrag(${JSON.stringify(item.name)})'
                          ondragend="endDrag()">
                         <div class="person-name">${item.name}</div>
-                        <div class="person-meta">עומס חודשי: ${monthlyLoad(item.name)} · ${used ? 'כבר שובץ הערב' : 'זמין לגרירה'}</div>
+                        <div class="person-meta">עומס חודשי: ${monthlyLoad(item.name)} · ${assignmentText}</div>
                         <div class="person-badges">
                             ${(item.roles || []).map(role => `<span class="badge gold">${role}</span>`).join('')}
                             ${certifiedLevels.map(levelInfo => `<span class="badge good">${levelInfo.lesson}</span>`).join('')}
